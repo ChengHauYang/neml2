@@ -28,8 +28,8 @@
 #include <map>
 #include <filesystem>
 
-#include "neml2/misc/string_utils.h"
-#include "neml2/base/OptionSet.h"
+#include "misc/string_utils.h"
+#include "base/OptionSet.h"
 
 namespace neml2
 {
