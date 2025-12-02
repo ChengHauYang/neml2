@@ -3,7 +3,10 @@
 # ----------------------------------------------------------------------------
 function(neml2_add_submodule mname TYPE mdir)
   file(GLOB_RECURSE msrcs CONFIGURE_DEPENDS ${mdir}/*.cxx)
-  file(GLOB_RECURSE mheaders CONFIGURE_DEPENDS ${NEML2_SOURCE_DIR}/include/neml2/${mdir}/*.h)
+  file(GLOB_RECURSE mheaders CONFIGURE_DEPENDS
+          ${mdir}/include/**/*.h
+          ${NEML2_SOURCE_DIR}/include/neml2/${mdir}/*.h
+  )
   add_library(${mname} ${TYPE} ${msrcs})
 
   target_sources(${mname}
@@ -33,6 +36,14 @@ function(neml2_add_submodule mname TYPE mdir)
     FILE_SET HEADERS COMPONENT libneml2
   )
 
+  # Header search paths for all submodules
+  target_include_directories(${mname}
+    PUBLIC
+      $<BUILD_INTERFACE:${NEML2_SOURCE_DIR}/include/neml2>
+      $<BUILD_INTERFACE:${NEML2_SOURCE_DIR}/tensors/include>
+      $<INSTALL_INTERFACE:include>
+  )
+
 endfunction()
 
 # ----------------------------------------------------------------------------
@@ -47,13 +58,34 @@ endfunction()
 # utilities shall be used to load the runtime objects.
 add_library(neml2 INTERFACE)
 
-# misc
-neml2_add_submodule(misc SHARED misc)
-target_link_libraries(misc PUBLIC torch::core)
+# ----------------------------------------------------------------------------
+# Set include paths
+# ----------------------------------------------------------------------------
+# Use generator expressions ($<...>) here to fix export errors
+target_include_directories(neml2 INTERFACE
+  # 1. Let everyone find the tensors and misc headers (currently under tensors/include)
+  #    Assuming your layout is: path/to/tensors/include/misc/errors.h
+  $<BUILD_INTERFACE:${NEML2_SOURCE_DIR}/tensors/include>
 
-if(TARGET torch::cuda)
-  target_link_libraries(misc PUBLIC torch::cuda)
-endif()
+  # 2. To support existing code that uses #include "neml2/misc/errors.h"
+  #    If your folder layout is only include/misc and not include/neml2/misc,
+  #    you might need the line below, or you must adjust the include paths in your C++ sources.
+  #    (Keep the line above for now; if this line is meant to make neml2/... resolvable,
+  #     ensure the include directory structure is correct.)
+
+  # 3. Make includes like base/OptionSet.h work
+  #    Since Registry.h does #include "base/OptionSet.h"
+  #    we need to add .../include/neml2 to the search paths
+  $<BUILD_INTERFACE:${NEML2_SOURCE_DIR}/include/neml2>
+)
+
+# misc
+#neml2_add_submodule(misc SHARED misc)
+#target_link_libraries(misc PUBLIC torch::core)
+#
+#if(TARGET torch::cuda)
+#  target_link_libraries(misc PUBLIC torch::cuda)
+#endif()
 
 if(NEML2_JSON)
   target_compile_definitions(misc PUBLIC NEML2_HAS_JSON)
@@ -66,29 +98,33 @@ if(NEML2_CSV)
 endif()
 
 if(NEML2_PCH)
-  target_precompile_headers(misc PUBLIC
-    <neml2/misc/types.h>
-    <neml2/misc/assertions.h>
-  )
+#  target_precompile_headers(misc PUBLIC
+#    <neml2/misc/types.h>
+#    <neml2/misc/assertions.h>
+#  )
+target_precompile_headers(tensors PUBLIC
+        <misc/types.h>
+        <misc/assertions.h>
+)
 endif()
 
-# libneml2_tensor
-neml2_add_submodule(tensor SHARED tensors)
-target_link_libraries(tensor PUBLIC misc)
-
-if(NEML2_PCH)
-  target_precompile_headers(tensor PUBLIC
-    <neml2/tensors/TensorBase.h>
-    <neml2/tensors/TensorBaseImpl.h>
-    <neml2/tensors/PrimitiveTensor.h>
-    <neml2/tensors/assertions.h>
-    <neml2/tensors/shape_utils.h>
-  )
-endif()
+## libneml2_tensor
+#neml2_add_submodule(tensor SHARED tensors)
+#target_link_libraries(tensor PUBLIC misc)
+#
+#if(NEML2_PCH)
+#  target_precompile_headers(tensor PUBLIC
+#    <neml2/tensors/TensorBase.h>
+#    <neml2/tensors/TensorBaseImpl.h>
+#    <neml2/tensors/PrimitiveTensor.h>
+#    <neml2/tensors/assertions.h>
+#    <neml2/tensors/shape_utils.h>
+#  )
+#endif()
 
 # libneml2_base
 neml2_add_submodule(base SHARED base)
-target_link_libraries(base PUBLIC tensor hit)
+target_link_libraries(base PUBLIC tensors hit)
 
 if(NEML2_PCH)
   target_precompile_headers(base PUBLIC
@@ -101,17 +137,17 @@ endif()
 
 # libneml2_user_tensor
 neml2_add_submodule(user_tensor SHARED user_tensors)
-target_link_libraries(user_tensor PUBLIC tensor base)
+target_link_libraries(user_tensor PUBLIC tensors base)
 target_link_options(user_tensor INTERFACE ${CMAKE_CXX_LINK_WHAT_YOU_USE_FLAG})
 
 # libneml2_solver
 neml2_add_submodule(solver SHARED solvers)
-target_link_libraries(solver PUBLIC tensor base)
+target_link_libraries(solver PUBLIC tensors base)
 target_link_options(solver INTERFACE ${CMAKE_CXX_LINK_WHAT_YOU_USE_FLAG})
 
 # libneml2_model
 neml2_add_submodule(model SHARED models)
-target_link_libraries(model PUBLIC solver tensor base)
+target_link_libraries(model PUBLIC solver tensors base)
 target_link_options(model INTERFACE ${CMAKE_CXX_LINK_WHAT_YOU_USE_FLAG})
 
 if(NEML2_PCH)
@@ -122,13 +158,13 @@ endif()
 
 # libneml2_driver
 neml2_add_submodule(driver SHARED drivers)
-target_link_libraries(driver PUBLIC model tensor base)
+target_link_libraries(driver PUBLIC model tensors base)
 target_link_options(driver INTERFACE ${CMAKE_CXX_LINK_WHAT_YOU_USE_FLAG})
 
 # libneml2_dispatcher
 if(NEML2_WORK_DISPATCHER)
   neml2_add_submodule(dispatcher SHARED dispatchers)
-  target_link_libraries(dispatcher PUBLIC tensor model)
+  target_link_libraries(dispatcher PUBLIC tensors model)
   target_link_libraries(dispatcher PUBLIC timpi)
   target_compile_definitions(dispatcher PUBLIC NEML2_HAS_DISPATCHER)
   target_link_libraries(driver PUBLIC dispatcher)

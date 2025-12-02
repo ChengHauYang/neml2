@@ -24,27 +24,4 @@
 
 #pragma once
 
-namespace neml2
-{
-// Forward declaration
-class ParameterStore;
-class BufferStore;
-
-/// A passkey to allow trusted classes to perform raw assignment to variables and parameters
-struct TracerPrivilege
-{
-  TracerPrivilege(const TracerPrivilege &) = default;
-  TracerPrivilege(TracerPrivilege &&) = default;
-  TracerPrivilege & operator=(const TracerPrivilege &) = delete;
-  TracerPrivilege & operator=(TracerPrivilege &&) = delete;
-  ~TracerPrivilege() = default;
-
-private:
-  // only the following classes can construct this key
-  friend class ParameterStore;
-  friend class BufferStore;
-
-  // private constructor so only trusted friends can construct this key
-  TracerPrivilege() = default;
-};
-} // namespace neml2
+#include "neml2/TracerPrivilege.h"
