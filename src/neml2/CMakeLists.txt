@@ -147,7 +147,7 @@ target_link_options(solver INTERFACE ${CMAKE_CXX_LINK_WHAT_YOU_USE_FLAG})
 
 # libneml2_model
 neml2_add_submodule(model SHARED models)
-target_link_libraries(model PUBLIC solver tensor base)
+target_link_libraries(model PUBLIC solver tensors base)
 target_link_options(model INTERFACE ${CMAKE_CXX_LINK_WHAT_YOU_USE_FLAG})
 
 if(NEML2_PCH)
@@ -158,7 +158,7 @@ endif()
 
 # libneml2_driver
 neml2_add_submodule(driver SHARED drivers)
-target_link_libraries(driver PUBLIC model tensor base)
+target_link_libraries(driver PUBLIC model tensors base)
 target_link_options(driver INTERFACE ${CMAKE_CXX_LINK_WHAT_YOU_USE_FLAG})
 
 # libneml2_dispatcher
