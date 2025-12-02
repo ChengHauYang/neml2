@@ -67,25 +67,11 @@ target_include_directories(neml2 INTERFACE
   #    Assuming your layout is: path/to/tensors/include/misc/errors.h
   $<BUILD_INTERFACE:${NEML2_SOURCE_DIR}/tensors/include>
 
-  # 2. To support existing code that uses #include "neml2/misc/errors.h"
-  #    If your folder layout is only include/misc and not include/neml2/misc,
-  #    you might need the line below, or you must adjust the include paths in your C++ sources.
-  #    (Keep the line above for now; if this line is meant to make neml2/... resolvable,
-  #     ensure the include directory structure is correct.)
-
-  # 3. Make includes like base/OptionSet.h work
+  # 2. Make includes like base/OptionSet.h work
   #    Since Registry.h does #include "base/OptionSet.h"
   #    we need to add .../include/neml2 to the search paths
   $<BUILD_INTERFACE:${NEML2_SOURCE_DIR}/include/neml2>
 )
-
-# misc
-#neml2_add_submodule(misc SHARED misc)
-#target_link_libraries(misc PUBLIC torch::core)
-#
-#if(TARGET torch::cuda)
-#  target_link_libraries(misc PUBLIC torch::cuda)
-#endif()
 
 if(NEML2_JSON)
   target_compile_definitions(misc PUBLIC NEML2_HAS_JSON)
@@ -98,29 +84,11 @@ if(NEML2_CSV)
 endif()
 
 if(NEML2_PCH)
-#  target_precompile_headers(misc PUBLIC
-#    <neml2/misc/types.h>
-#    <neml2/misc/assertions.h>
-#  )
 target_precompile_headers(tensors PUBLIC
         <misc/types.h>
         <misc/assertions.h>
 )
 endif()
-
-## libneml2_tensor
-#neml2_add_submodule(tensor SHARED tensors)
-#target_link_libraries(tensor PUBLIC misc)
-#
-#if(NEML2_PCH)
-#  target_precompile_headers(tensor PUBLIC
-#    <neml2/tensors/TensorBase.h>
-#    <neml2/tensors/TensorBaseImpl.h>
-#    <neml2/tensors/PrimitiveTensor.h>
-#    <neml2/tensors/assertions.h>
-#    <neml2/tensors/shape_utils.h>
-#  )
-#endif()
 
 # libneml2_base
 neml2_add_submodule(base SHARED base)

@@ -128,51 +128,6 @@ endif()
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
-# Torch
-# ----------------------------------------------------------------------------
-# find_package(torch MODULE OPTIONAL_COMPONENTS cuda python)
-
-# if(NOT torch_FOUND)
-#       if(UNIX)
-#             if(NOT APPLE)
-#                   set(torch_URL https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-${torch_VERSION}%2Bcpu.zip)
-#             else()
-#                   if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
-#                         set(torch_URL https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-${torch_VERSION}.zip)
-#                   else()
-#                         set(torch_URL https://download.pytorch.org/libtorch/cpu/libtorch-macos-x86_64-${torch_VERSION}.zip)
-#                   endif()
-#             endif()
-#       endif()
-
-#       if(torch_URL)
-#             download_from_url(torch ${torch_URL} ${NEML2_CONTRIB_PREFIX})
-#             set(torch_ROOT ${NEML2_CONTRIB_PREFIX}/torch-src)
-#             find_package(torch MODULE REQUIRED OPTIONAL_COMPONENTS cuda python)
-#       else()
-#             message(FATAL_ERROR "Torch not found.")
-#       endif()
-# endif()
-
-# # Note the torch libraries are never installed as part of the NEML2 installation.
-# #
-# # For a standard NEML2 installation, we add the absolute link path to the torch
-# # libraries as rpath.
-# #
-# # For a wheel installation, we prepend the rpaths
-# #   ../torch/lib
-# #   ../../torch/lib
-# # assuming the wheel is installed in a standard site-packages location alongside torch.
-
-# # find_package(neml2 CONFIG) will rely on the Findtorch.cmake module
-# install(FILES
-#       ${NEML2_SOURCE_DIR}/cmake/Modules/Findtorch.cmake
-#       ${NEML2_SOURCE_DIR}/cmake/Modules/DetectTorchCXXABI.cxx
-#       DESTINATION share/cmake/neml2/Modules
-#       COMPONENT libneml2
-# )
-
-# ----------------------------------------------------------------------------
 # wasp
 # ----------------------------------------------------------------------------
 find_package(wasp MODULE COMPONENTS core hit)
