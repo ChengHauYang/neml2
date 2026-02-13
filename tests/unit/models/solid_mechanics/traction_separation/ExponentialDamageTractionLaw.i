@@ -22,7 +22,6 @@
   [n]
     type = Vec
     batch_shape = '(3)'
-    intermediate_dimension = 1
     values = "0.70710678 0.70710678 0.0
               0.0        0.70710678 0.70710678
               0.70710678 0.0        0.70710678"
