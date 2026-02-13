@@ -60,3 +60,5 @@ Testing
 *.pdf
 *.gv
 *.json
+
+.idea

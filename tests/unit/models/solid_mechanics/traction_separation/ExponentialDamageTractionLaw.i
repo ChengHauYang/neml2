@@ -2,12 +2,12 @@
   [unit]
     type = ModelUnitTest
     model = 'model'
-    input_Scalar_names = 'state/jump'
-    input_Scalar_values = 'g'
-    output_Scalar_names = 'state/traction'
-    output_Scalar_values = 'traction'
+    input_Vec_names = 'g n'
+    input_Vec_values = 'g n'
+    output_Vec_names = 'state/traction'
+    output_Vec_values = 'traction'
+    check_derivatives = false
     check_AD_parameter_derivatives = false
-    derivative_abs_tol = 1e-7
   []
 []
 
@@ -40,6 +40,13 @@
     type = Scalar
     values = '0.01 0.1 0.15'
     batch_shape = '(3)'
+  []
+  [traction]
+    type = Vec
+    batch_shape = '(3)'
+    values = "0.0 0.0 0.0
+              0.0 -1.98811713e-05 0.0
+              0.0 0.0 -3.22044125e-02"
   []
 []
 
