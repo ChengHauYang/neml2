@@ -24,6 +24,7 @@
 
 #include "neml2/models/solid_mechanics/traction_separation/BilinearMixedModeTractionLaw.h"
 
+#include "neml2/misc/assertions.h"
 #include "neml2/tensors/Scalar.h"
 #include "neml2/tensors/Vec.h"
 #include "neml2/tensors/functions/norm.h"
@@ -195,17 +196,18 @@ BilinearMixedModeTractionLaw::set_value(bool out, bool /*dout_din*/, bool /*d2ou
   //   interface_jump_local = R^T * interface_jump_global
   // So we must NOT re-project using _normal().
 
+  // Step 1: compute mode mixity ratio, beta
   // Current jump, old jump
   const auto g = _jump();
   const auto g_old = _jump_old();
 
   // Which jump used for beta and delta_m
-  const auto g_beta = _lag_mode_mixity ? g_old : g;
+  const auto delta = _lag_mode_mixity ? g_old : g;
   const auto g_eff = _lag_disp_jump ? g_old : g;
 
-  // Mode mixity beta (using g_beta)
-  const Scalar dn_beta = g_beta(0);
-  const Scalar ds_beta = sqrt(g_beta(1) * g_beta(1) + g_beta(2) * g_beta(2));
+  // Mode mixity beta (using delta)
+  const Scalar dn_beta = delta(0);
+  const Scalar ds_beta = sqrt(delta(1) * delta(1) + delta(2) * delta(2));
 
   // beta = ds/dn if opening (dn>0), else 0
   const at::Tensor dn_bt = static_cast<const at::Tensor &>(dn_beta);
@@ -214,7 +216,7 @@ BilinearMixedModeTractionLaw::set_value(bool out, bool /*dout_din*/, bool /*d2ou
   const at::Tensor beta_t = at::where(dn_bt > 0, ds_bt / dn_bt, zero);
   const Scalar beta(beta_t, dn_beta.dynamic_dim(), dn_beta.intmd_dim());
 
-  // Critical displacement jumps
+  // Step 2: compute critical displacement jump
   const Scalar delta_n0 = _N / _K;
   const Scalar delta_s0 = _S / _K;
 
@@ -230,6 +232,7 @@ BilinearMixedModeTractionLaw::set_value(bool out, bool /*dout_din*/, bool /*d2ou
     delta_init = Scalar(di_t, dn_beta.dynamic_dim(), dn_beta.intmd_dim());
   }
 
+  // Step 3: compute final displacement jump
   // delta_final
   Scalar delta_final = std::sqrt(2.0) * 2.0 * _GIIc / _S; // pure shear baseline
   {
@@ -264,16 +267,18 @@ BilinearMixedModeTractionLaw::set_value(bool out, bool /*dout_din*/, bool /*d2ou
     delta_final = Scalar(df_t, dn_beta.dynamic_dim(), dn_beta.intmd_dim());
   }
 
-  // Effective displacement jump delta_m (using g_eff) -- MOOSE local-frame definition
+  // Step 4: compute effective displacement jump delta_m (using g_eff)
+  // Effective displacement jump delta_m (using g_eff)
   const Scalar dn_eff = g_eff(0);
   const Scalar ds_eff = sqrt(g_eff(1) * g_eff(1) + g_eff(2) * g_eff(2));
 
-  // dn_pos = H(dn)*dn (MOOSE-aligned Macaulay regularization)
+  // dn_pos = H(dn)*dn (Macaulay regularization)
   const Scalar dn_pos = macauley_pos(dn_eff, _alpha);
 
   // delta_m = sqrt(ds^2 + dn_pos^2)
   const Scalar delta_m = sqrt(ds_eff * ds_eff + dn_pos * dn_pos);
 
+  // Step 5: compute damage
   // Damage evolution (piecewise + irreversibility + viscosity)
   const at::Tensor dm_t = static_cast<const at::Tensor &>(delta_m);
   const at::Tensor di_t = static_cast<const at::Tensor &>(delta_init);
@@ -282,10 +287,21 @@ BilinearMixedModeTractionLaw::set_value(bool out, bool /*dout_din*/, bool /*d2ou
   const at::Tensor d0 = at::zeros_like(dm_t);
   const at::Tensor d1 = at::ones_like(dm_t);
 
-  const at::Tensor eps = at::full_like(dm_t, 1e-30);
-  const at::Tensor dm_safe = dm_t + eps;
+  // Guard only the physically required denominator and regularize dm_t near 0.
+  const auto assert_nonzero = [](const at::Tensor & denom, const char * what)
+  {
+    const at::Tensor tol = at::full_like(denom, 1e-14);
+    const bool bad_denom = at::any(at::abs(denom) <= tol).item<bool>();
+    neml_assert(!bad_denom,
+                "BilinearMixedModeTractionLaw: ",
+                what,
+                " is zero/too small. Check inputs and parameters.");
+  };
+  assert_nonzero(df_t - di_t, "delta_final - delta_init");
+  assert_nonzero(dm_t, "effective displacement jump");
 
-  const at::Tensor dmid = df_t * (dm_t - di_t) / dm_safe / (df_t - di_t + eps);
+  const at::Tensor dm_safe = dm_t + eps;
+  const at::Tensor dmid = df_t * (dm_t - di_t) / dm_t / (df_t - di_t);
 
   at::Tensor dnew = at::where(dm_t < di_t, d0, at::where(dm_t > df_t, d1, dmid));
 
