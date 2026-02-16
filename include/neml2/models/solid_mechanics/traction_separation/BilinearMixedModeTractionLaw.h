@@ -66,26 +66,21 @@ protected:
 
   /// time step size
   const Variable<Scalar> & _dt;
-  /// old jump (for lagging)
-  const Variable<Vec> & _jump_old;
+  /// old jump (only needed when lagging is enabled)
+  const Variable<Vec> * _jump_old;
   /// old damage
   const Variable<Scalar> & _damage_old;
   /// Output: damage variable (0: undamaged, 1: fully damaged)
   Variable<Scalar> & _damage;
 
-  // Optional helpful outputs
-  Variable<Scalar> & _beta_out;
-  Variable<Scalar> & _delta_init_out;
-  Variable<Scalar> & _delta_final_out;
-  Variable<Scalar> & _delta_m_out;
-
-  // -------------------------
-  // Helpers (MOOSE-aligned)
-  // -------------------------
+  // Helpers
   Scalar regularizedHeaviside(const Scalar & x, const Scalar & smoothing_length) const;
   Scalar regularizedHeavisideDerivative(const Scalar & x, const Scalar & smoothing_length) const;
 
   Scalar macauley_pos(const Scalar & x, const Scalar & smoothing_length) const;
+
+  Scalar maximum(const Scalar & a, const Scalar & b) const;
+  Scalar minimum(const Scalar & a, const Scalar & b) const;
 };
 
 } // namespace neml2

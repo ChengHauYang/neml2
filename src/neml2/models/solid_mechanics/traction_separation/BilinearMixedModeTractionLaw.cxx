@@ -91,24 +91,13 @@ BilinearMixedModeTractionLaw::expected_options()
   options.set_output("damage") = VariableName(STATE, "damage");
   options.set("damage").doc() = "Scalar damage variable d in [0,1].";
 
-  options.set_output("beta") = VariableName(STATE, "beta");
-  options.set("beta").doc() = "Mode mixity ratio beta = delta_s / delta_n (for opening).";
-
-  options.set_output("delta_init") = VariableName(STATE, "delta_init");
-  options.set("delta_init").doc() = "Effective displacement jump at damage initiation.";
-
-  options.set_output("delta_final") = VariableName(STATE, "delta_final");
-  options.set("delta_final").doc() = "Effective displacement jump at full degradation.";
-
-  options.set_output("delta_m") = VariableName(STATE, "delta_m");
-  options.set("delta_m").doc() = "Effective displacement jump.";
-
   // Old state inputs
   options.set_input("damage_old") = VariableName(OLD_STATE, "damage");
   options.set("damage_old").doc() = "Old damage value for irreversibility.";
 
   options.set_input("jump_old") = VariableName(OLD_STATE, "jump");
-  options.set("jump_old").doc() = "Old displacement jump for lagging.";
+  options.set("jump_old").doc() = "Old displacement jump for lagging (needed only if "
+                                  "lag_mode_mixity or lag_displacement_jump is true).";
 
   return options;
 }
@@ -130,14 +119,10 @@ BilinearMixedModeTractionLaw::BilinearMixedModeTractionLaw(const OptionSet & opt
     _lag_disp_jump(options.get<bool>("lag_displacement_jump")),
 
     _dt(declare_input_variable<Scalar>("dt")),
-    _jump_old(declare_input_variable<Vec>("jump_old")),
+    _jump_old((_lag_mode_mixity || _lag_disp_jump) ? &declare_input_variable<Vec>("jump_old")
+                                                   : nullptr),
     _damage_old(declare_input_variable<Scalar>("damage_old")),
-
-    _damage(declare_output_variable<Scalar>("damage")),
-    _beta_out(declare_output_variable<Scalar>("beta")),
-    _delta_init_out(declare_output_variable<Scalar>("delta_init")),
-    _delta_final_out(declare_output_variable<Scalar>("delta_final")),
-    _delta_m_out(declare_output_variable<Scalar>("delta_m"))
+    _damage(declare_output_variable<Scalar>("damage"))
 {
 }
 
@@ -187,19 +172,35 @@ BilinearMixedModeTractionLaw::macauley_pos(const Scalar & x, const Scalar & smoo
   return regularizedHeaviside(x, smoothing_length) * x;
 }
 
+Scalar
+BilinearMixedModeTractionLaw::maximum(const Scalar & a, const Scalar & b) const
+{
+  const at::Tensor ta = static_cast<const at::Tensor &>(a);
+  const at::Tensor tb = static_cast<const at::Tensor &>(b);
+  return Scalar(at::maximum(ta, tb), a.dynamic_dim(), a.intmd_dim());
+}
+
+Scalar
+BilinearMixedModeTractionLaw::minimum(const Scalar & a, const Scalar & b) const
+{
+  const at::Tensor ta = static_cast<const at::Tensor &>(a);
+  const at::Tensor tb = static_cast<const at::Tensor &>(b);
+  return Scalar(at::minimum(ta, tb), a.dynamic_dim(), a.intmd_dim());
+}
+
 void
 BilinearMixedModeTractionLaw::set_value(bool out, bool /*dout_din*/, bool /*d2out_din2*/)
 {
-  // _jump() and _jump_old() are ALREADY in the local CZM frame:
+  // _jump() and _jump_old() are in the local CZM frame:
   //   g(0) = normal component, g(1), g(2) = tangential components
   // This matches MOOSE:
   //   interface_jump_local = R^T * interface_jump_global
   // So we must NOT re-project using _normal().
 
   // Step 1: compute mode mixity ratio, beta
-  // Current jump, old jump
+  // Current jump, old jump (if lagging is disabled, old jump is not needed)
   const auto g = _jump();
-  const auto g_old = _jump_old();
+  const auto g_old = _jump_old ? (*_jump_old)() : g;
 
   // Which jump used for beta and delta_m
   const auto delta = _lag_mode_mixity ? g_old : g;
@@ -212,8 +213,8 @@ BilinearMixedModeTractionLaw::set_value(bool out, bool /*dout_din*/, bool /*d2ou
   // beta = ds/dn if opening (dn>0), else 0
   const at::Tensor dn_bt = static_cast<const at::Tensor &>(dn_beta);
   const at::Tensor ds_bt = static_cast<const at::Tensor &>(ds_beta);
-  const at::Tensor zero = at::zeros_like(dn_bt);
-  const at::Tensor beta_t = at::where(dn_bt > 0, ds_bt / dn_bt, zero);
+  const at::Tensor zero_t = at::zeros_like(dn_bt);
+  const at::Tensor beta_t = at::where(dn_bt > 0, ds_bt / dn_bt, zero_t);
   const Scalar beta(beta_t, dn_beta.dynamic_dim(), dn_beta.intmd_dim());
 
   // Step 2: compute critical displacement jump
@@ -300,7 +301,6 @@ BilinearMixedModeTractionLaw::set_value(bool out, bool /*dout_din*/, bool /*d2ou
   assert_nonzero(df_t - di_t, "delta_final - delta_init");
   assert_nonzero(dm_t, "effective displacement jump");
 
-  const at::Tensor dm_safe = dm_t + eps;
   const at::Tensor dmid = df_t * (dm_t - di_t) / dm_t / (df_t - di_t);
 
   at::Tensor dnew = at::where(dm_t < di_t, d0, at::where(dm_t > df_t, d1, dmid));
@@ -312,45 +312,31 @@ BilinearMixedModeTractionLaw::set_value(bool out, bool /*dout_din*/, bool /*d2ou
   // viscous regularization: (d + visc * d_old / dt) / (visc/dt + 1)
   const at::Tensor visc_t = static_cast<const at::Tensor &>(_visc);
   const at::Tensor dt_t = static_cast<const at::Tensor &>(_dt());
-  const at::Tensor denom = visc_t / (dt_t + eps) + 1.0;
-  const at::Tensor dvisc = (dnew + visc_t * dold / (dt_t + eps)) / denom;
+  const at::Tensor dt_safe = dt_t + at::full_like(dt_t, 1e-14);
+  const at::Tensor denom = visc_t / dt_safe + 1.0;
+  const at::Tensor dvisc = (dnew + visc_t * dold / dt_safe) / denom;
 
   const Scalar damage(dvisc, delta_m.dynamic_dim(), delta_m.intmd_dim());
 
+  // Step 6: compute traction
   // Traction (active/inactive split; compression not degraded)
   if (out)
   {
     _damage = damage;
-    _beta_out = beta;
-    _delta_init_out = delta_init;
-    _delta_final_out = delta_final;
-    _delta_m_out = delta_m;
 
-    // Use current jump for traction (local jump split)
-    const Scalar dn_cur = g(0);
-    const Scalar dn_cur_pos = macauley_pos(dn_cur, _alpha);
-    const Scalar dt1_cur = g(1);
-    const Scalar dt2_cur = g(2);
-    const Scalar zero = Scalar::zeros_like(dn_cur);
+    const Scalar dn = g(0);
+    const Scalar zero = Scalar::zeros_like(dn);
 
-    // active: [<dn>_+, dt1, dt2]
-    const Vec g_active = Vec::fill(dn_cur_pos, dt1_cur, dt2_cur);
+    const Scalar dn_pos = maximum(dn, zero);
+    const Scalar dn_neg = minimum(dn, zero);
 
-    // inactive (compression only): [dn - <dn>_+, 0, 0]
-    const Vec g_inactive = Vec::fill(dn_cur - dn_cur_pos, zero, zero);
+    const Vec g_active = Vec::fill(dn_pos, g(1), g(2));
+    const Vec g_inactive = Vec::fill(dn_neg, zero, zero);
 
     const Scalar one_minus_d = 1.0 - damage;
-
-    const at::Tensor t_active = static_cast<const at::Tensor &>(one_minus_d) *
-                                static_cast<const at::Tensor &>(_K) *
-                                static_cast<const at::Tensor &>(g_active);
-
-    const at::Tensor t_inactive =
-        static_cast<const at::Tensor &>(_K) * static_cast<const at::Tensor &>(g_inactive);
-
-    const at::Tensor ttot = t_active + t_inactive;
-
-    _traction = neml2::Vec(ttot, g.dynamic_dim(), g.intmd_dim());
+    const Vec t_active = (one_minus_d * _K) * g_active;
+    const Vec t_inactive = _K * g_inactive;
+    _traction = t_active + t_inactive;
   }
 }
 

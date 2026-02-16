@@ -26,6 +26,8 @@
 #include "neml2/tensors/functions/vdot.h"
 #include "neml2/tensors/functions/norm.h"
 
+#include <ATen/ATen.h>
+
 namespace neml2
 {
 
@@ -48,6 +50,20 @@ ExponentialDamageTractionLaw::expected_options()
   options.set("softening_length_scale").doc() =
       "Softening length scale controlling damage evolution.";
 
+  options.set<bool>("irreversible") = false;
+  options.set("irreversible").doc() =
+      "If true, enforce damage irreversibility using d = max(d, d_old).";
+
+  // Old damage is only required when irreversibility is enabled, but we still define the option
+  // here so the name/mount is standardized.
+  options.set_input("damage_old") = VariableName(OLD_STATE, "damage");
+  options.set("damage_old").doc() = "Old damage value used when irreversibility is enabled.";
+
+  // Damage is ALWAYS produced by this model, so we always declare it as a state output so the
+  // driver can store it and provide old_state/damage next step.
+  options.set_output("damage") = VariableName(STATE, "damage");
+  options.set("damage").doc() = "Current damage value.";
+
   return options;
 }
 
@@ -55,36 +71,43 @@ ExponentialDamageTractionLaw::ExponentialDamageTractionLaw(const OptionSet & opt
   : CohesiveTractionLaw(options),
     _Gc(declare_parameter<Scalar>("Gc", "fracture_energy")),
     _beta(declare_parameter<Scalar>("beta", "tangential_opening_weight")),
-    _delta0(declare_parameter<Scalar>("delta0", "softening_length_scale"))
+    _delta0(declare_parameter<Scalar>("delta0", "softening_length_scale")),
+    _irreversible(options.get<bool>("irreversible")),
+    _damage_old(_irreversible ? &declare_input_variable<Scalar>("damage_old") : nullptr),
+    _damage(declare_output_variable<Scalar>("damage"))
 {
 }
 
 void
 ExponentialDamageTractionLaw::set_value(bool out, bool /*dout_din*/, bool /**/)
 {
+  // _jump() is in the local CZM frame:
+  //   g(0) = normal component, g(1), g(2) = tangential components
   const auto g = _jump();
-  const auto n = _normal();
 
-  auto delta_n = neml2::vdot(g, n);
-
-  auto g_t = g - delta_n * n;
-
-  auto delta_t = neml2::norm(g_t);
+  const auto delta_n = g(0);
+  const auto delta_t = sqrt(g(1) * g(1) + g(2) * g(2));
 
   auto delta_eff = sqrt(delta_n * delta_n + _beta * delta_t * delta_t);
 
-  auto damage = 1.0 - exp(-delta_eff / _delta0);
+  at::Tensor damage_t = 1.0 - at::exp(-static_cast<const at::Tensor &>(delta_eff) /
+                                      static_cast<const at::Tensor &>(_delta0));
 
-  auto prefactor = -_Gc / (_delta0 * _delta0) * (1.0 - damage);
+  // Optional irreversibility: never allow damage to decrease.
+  if (_irreversible)
+  {
+    const at::Tensor dold = static_cast<const at::Tensor &>((*_damage_old)());
+    damage_t = at::maximum(damage_t, dold);
+  }
+
+  const Scalar damage(damage_t, g.dynamic_dim(), g.intmd_dim());
+
+  const Scalar prefactor = -_Gc / (_delta0 * _delta0) * (1.0 - damage);
 
   if (out)
   {
-    // Treat prefactor and g as ATen tensors and multiply them
-    const at::Tensor tprod =
-        static_cast<const at::Tensor &>(prefactor) * static_cast<const at::Tensor &>(g);
-
-    // Reconstruct neml2::Vec with the same dynamic/intermediate dimensions as g
-    _traction = neml2::Vec(tprod, g.dynamic_dim(), g.intmd_dim());
+    _damage = damage;          // always store
+    _traction = prefactor * g; // NEML2 broadcasting (safe)
   }
 }
 

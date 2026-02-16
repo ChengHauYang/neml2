@@ -2,6 +2,8 @@
   [unit]
     type = ModelUnitTest
     model = 'model'
+    input_Scalar_names = 'old_state/damage'
+    input_Scalar_values = 'damage_old'
     input_Vec_names = 'g'
     input_Vec_values = 'g'
     output_Scalar_names = 'state/damage'
@@ -36,17 +38,22 @@
     values = '0.01 0.1 0.15'
     batch_shape = '(3)'
   []
-  [traction]
-    type = Vec
+  [damage_old]
+    type = Scalar
     batch_shape = '(3)'
-    values = "0.0 0.0 0.0
-              0.0 -2.04653643e-06 0.0
-              0.0 0.0 -3.22044123e-02"
+    values = '0.0 9.9999999e-01 1.0'
   []
   [damage]
     type = Scalar
     batch_shape = '(3)'
-    values = '1.0 9.999999573638243e-01 9.996645373720975e-01'
+    values = '1.0 9.9999999e-01 1.0'
+  []
+  [traction]
+    type = Vec
+    batch_shape = '(3)'
+    values = "0.0 0.0 0.0
+              0.0 -4.8e-07 0.0
+              0.0 0.0 0.0"
   []
 []
 
@@ -57,5 +64,6 @@
     fracture_energy = 'gc'
     tangential_opening_weight = 'beta'
     softening_length_scale = 'delta0'
+    irreversible = true
   []
 []

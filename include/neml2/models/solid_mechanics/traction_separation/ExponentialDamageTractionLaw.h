@@ -43,6 +43,15 @@ protected:
   const Scalar & _Gc;     // critical energy release rate
   const Scalar & _beta;   // coupling parameter for effective separation
   const Scalar & _delta0; // softening length scale
+
+  /// If true, enforce damage irreversibility: d = max(d, d_old)
+  const bool _irreversible;
+
+  /// Old damage state input (used only when irreversibility is enabled)
+  const Variable<Scalar> * _damage_old;
+
+  /// Current damage output (always declared/stored)
+  Variable<Scalar> & _damage;
 };
 
 } // namespace neml2

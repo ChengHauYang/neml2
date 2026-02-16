@@ -40,9 +40,6 @@ protected:
   /// Input: generalized displacement jump [g] (vector)
   const Variable<Vec> & _jump;
 
-  /// Input: interface normal n (vector)
-  const Variable<Vec> & _normal;
-
   /// Output: cohesive traction vector
   Variable<Vec> & _traction;
 };

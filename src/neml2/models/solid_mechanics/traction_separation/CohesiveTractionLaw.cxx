@@ -35,9 +35,6 @@ CohesiveTractionLaw::expected_options()
   options.set_input("jump") = VariableName(STATE, "jump");
   options.set("jump").doc() = "Generalized displacement jump [[g]]";
 
-  options.set_input("normal") = VariableName(STATE, "normal");
-  options.set("normal").doc() = "Interface normal vector";
-
   options.set_output("traction") = VariableName(STATE, "traction");
   options.set("traction").doc() = "Cohesive traction";
 
@@ -47,7 +44,6 @@ CohesiveTractionLaw::expected_options()
 CohesiveTractionLaw::CohesiveTractionLaw(const OptionSet & options)
   : Model(options),
     _jump(declare_input_variable<Vec>("jump")),
-    _normal(declare_input_variable<Vec>("normal")),
     _traction(declare_output_variable<Vec>("traction"))
 {
 }
