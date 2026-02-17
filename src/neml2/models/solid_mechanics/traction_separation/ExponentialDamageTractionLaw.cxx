@@ -23,10 +23,9 @@
 // THE SOFTWARE.
 
 #include "neml2/models/solid_mechanics/traction_separation/ExponentialDamageTractionLaw.h"
-#include "neml2/tensors/functions/vdot.h"
-#include "neml2/tensors/functions/norm.h"
-
-#include <ATen/ATen.h>
+#include "neml2/tensors/functions/exp.h"
+#include "neml2/tensors/functions/sqrt.h"
+#include "neml2/tensors/functions/where.h"
 
 namespace neml2
 {
@@ -90,17 +89,14 @@ ExponentialDamageTractionLaw::set_value(bool out, bool /*dout_din*/, bool /**/)
 
   auto delta_eff = sqrt(delta_n * delta_n + _beta * delta_t * delta_t);
 
-  at::Tensor damage_t = 1.0 - at::exp(-static_cast<const at::Tensor &>(delta_eff) /
-                                      static_cast<const at::Tensor &>(_delta0));
+  Scalar damage = 1.0 - exp(-delta_eff / _delta0);
 
   // Optional irreversibility: never allow damage to decrease.
   if (_irreversible)
   {
-    const at::Tensor dold = static_cast<const at::Tensor &>((*_damage_old)());
-    damage_t = at::maximum(damage_t, dold);
+    const auto damage_old = (*_damage_old)();
+    damage = where(damage < damage_old, damage_old, damage);
   }
-
-  const Scalar damage(damage_t, g.dynamic_dim(), g.intmd_dim());
 
   const Scalar prefactor = -_Gc / (_delta0 * _delta0) * (1.0 - damage);
 
