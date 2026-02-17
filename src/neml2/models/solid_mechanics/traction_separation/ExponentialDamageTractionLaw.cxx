@@ -107,7 +107,45 @@ ExponentialDamageTractionLaw::set_value(bool out, bool /*dout_din*/, bool /**/)
   if (out)
   {
     _damage = damage;          // always store
-    _traction = prefactor * g; // NEML2 broadcasting (safe)
+    _traction = prefactor * g; // NEML2 broadcasting
+
+#ifdef DEBUG
+    // taction output
+    std::cout << "---traction output---------\n";
+    std::cout << "base_dim        = " << _traction.base_dim() << "\n";
+    std::cout << "dynamic_dim     = " << _traction.dynamic_dim() << "\n";
+    std::cout << "intmd_dim       = " << _traction.intmd_dim() << "\n";
+
+    for (Size i = 0; i < _traction.base_dim(); ++i)
+      std::cout << "base_size[" << i << "] = " << _traction.base_size(i) << "\n";
+
+    for (Size i = 0; i < _traction.dynamic_dim(); ++i)
+      std::cout << "dynamic_size[" << i << "] = " << _traction.dynamic_size(i) << "\n";
+
+    for (Size i = 0; i < _traction.intmd_dim(); ++i)
+      std::cout << "intmd_size[" << i << "] = " << _traction.intmd_size(i) << "\n";
+
+    std::cout << "base_sizes      = " << _traction.base_sizes() << "\n";
+    std::cout << "dynamic_sizes   = " << _traction.dynamic_sizes() << "\n";
+    std::cout << "intmd_sizes     = " << _traction.intmd_sizes() << "\n";
+
+    // damage output
+    std::cout << "---damage output---------\n";
+    std::cout << "base_dim        = " << _damage.base_dim() << "\n";
+    std::cout << "dynamic_dim     = " << _damage.dynamic_dim() << "\n";
+    std::cout << "intmd_dim       = " << _damage.intmd_dim() << "\n";
+    for (Size i = 0; i < _damage.base_dim(); ++i)
+      std::cout << "base_size[" << i << "] = " << _damage.base_size(i) << "\n";
+
+    for (Size i = 0; i < _damage.dynamic_dim(); ++i)
+      std::cout << "dynamic_size[" << i << "] = " << _damage.dynamic_size(i) << "\n";
+
+    for (Size i = 0; i < _damage.intmd_dim(); ++i)
+      std::cout << "intmd_size[" << i << "] = " << _damage.intmd_size(i) << "\n";
+    std::cout << "base_sizes      = " << _damage.base_sizes() << "\n";
+    std::cout << "dynamic_sizes   = " << _damage.dynamic_sizes() << "\n";
+    std::cout << "intmd_sizes     = " << _damage.intmd_sizes() << "\n";
+#endif
   }
 }
 

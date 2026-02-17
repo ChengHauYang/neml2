@@ -31,6 +31,7 @@
   [damage_old]
     type = Scalar
     values = '0 0.5 1'
+    # broadcast: damage_old(i, j) = damage_old(i, 0)
     batch_shape = '(3,1)'
   []
   [K]
@@ -69,6 +70,10 @@
   []
   [damage]
     type = Scalar
+    # flat = i * 4 + j
+    # (i=0) j=0 1 2 3
+    # (i=1) j=0 1 2 3
+    # (i=2) j=0 1 2 3
     batch_shape = '(3,4)'
     values = '0   0   0   0
               0.5 0.5 0.5 0.5

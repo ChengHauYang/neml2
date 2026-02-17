@@ -189,7 +189,7 @@ BilinearMixedModeTractionLaw::minimum(const Scalar & a, const Scalar & b) const
 }
 
 void
-BilinearMixedModeTractionLaw::set_value(bool out, bool /*dout_din*/, bool /*d2out_din2*/)
+BilinearMixedModeTractionLaw::set_value(bool out, bool dout_din, bool /*d2out_din2*/)
 {
   // _jump() and _jump_old() are in the local CZM frame:
   //   g(0) = normal component, g(1), g(2) = tangential components
@@ -319,7 +319,6 @@ BilinearMixedModeTractionLaw::set_value(bool out, bool /*dout_din*/, bool /*d2ou
   const Scalar damage(dvisc, delta_m.dynamic_dim(), delta_m.intmd_dim());
 
   // Step 6: compute traction
-  // Traction (active/inactive split; compression not degraded)
   if (out)
   {
     _damage = damage;
@@ -333,10 +332,55 @@ BilinearMixedModeTractionLaw::set_value(bool out, bool /*dout_din*/, bool /*d2ou
     const Vec g_active = Vec::fill(dn_pos, g(1), g(2));
     const Vec g_inactive = Vec::fill(dn_neg, zero, zero);
 
+    // Traction (active/inactive split; compression not degraded)
     const Scalar one_minus_d = 1.0 - damage;
     const Vec t_active = (one_minus_d * _K) * g_active;
     const Vec t_inactive = _K * g_inactive;
     _traction = t_active + t_inactive;
+
+#ifdef DEBUG
+    // taction output
+    std::cout << "---traction output---------\n";
+    std::cout << "base_dim        = " << _traction.base_dim() << "\n";
+    std::cout << "dynamic_dim     = " << _traction.dynamic_dim() << "\n";
+    std::cout << "intmd_dim       = " << _traction.intmd_dim() << "\n";
+
+    for (Size i = 0; i < _traction.base_dim(); ++i)
+      std::cout << "base_size[" << i << "] = " << _traction.base_size(i) << "\n";
+
+    for (Size i = 0; i < _traction.dynamic_dim(); ++i)
+      std::cout << "dynamic_size[" << i << "] = " << _traction.dynamic_size(i) << "\n";
+
+    for (Size i = 0; i < _traction.intmd_dim(); ++i)
+      std::cout << "intmd_size[" << i << "] = " << _traction.intmd_size(i) << "\n";
+
+    std::cout << "base_sizes      = " << _traction.base_sizes() << "\n";
+    std::cout << "dynamic_sizes   = " << _traction.dynamic_sizes() << "\n";
+    std::cout << "intmd_sizes     = " << _traction.intmd_sizes() << "\n";
+
+    // damage output
+    std::cout << "---damage output---------\n";
+    std::cout << "base_dim        = " << _damage.base_dim() << "\n";
+    std::cout << "dynamic_dim     = " << _damage.dynamic_dim() << "\n";
+    std::cout << "intmd_dim       = " << _damage.intmd_dim() << "\n";
+    for (Size i = 0; i < _damage.base_dim(); ++i)
+      std::cout << "base_size[" << i << "] = " << _damage.base_size(i) << "\n";
+
+    for (Size i = 0; i < _damage.dynamic_dim(); ++i)
+      std::cout << "dynamic_size[" << i << "] = " << _damage.dynamic_size(i) << "\n";
+
+    for (Size i = 0; i < _damage.intmd_dim(); ++i)
+      std::cout << "intmd_size[" << i << "] = " << _damage.intmd_size(i) << "\n";
+    std::cout << "base_sizes      = " << _damage.base_sizes() << "\n";
+    std::cout << "dynamic_sizes   = " << _damage.dynamic_sizes() << "\n";
+    std::cout << "intmd_sizes     = " << _damage.intmd_sizes() << "\n";
+#endif
+  }
+
+  // Step 7: compute derivatives
+  if (dout_din)
+  {
+    // _traction.d(_jump);
   }
 }
 
