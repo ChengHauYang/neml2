@@ -10,7 +10,7 @@
     output_Scalar_values = 'damage'
     output_Vec_names = 'state/traction'
     output_Vec_values = 'traction'
-    check_derivatives = false
+    check_derivatives = true
     check_AD_parameter_derivatives = false
   []
 []

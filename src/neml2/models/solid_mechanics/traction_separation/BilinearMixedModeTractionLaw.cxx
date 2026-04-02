@@ -435,6 +435,10 @@ BilinearMixedModeTractionLaw::set_value(bool out, bool dout_din, bool /*d2out_di
       dtraction_ddelta = dtraction_ddelta - _K * outer(g_active, dd_ddelta);
 
       _traction.d(_jump) = dtraction_ddelta;
+
+      std::cout << "dtraction_ddelta = ";
+      dtraction_ddelta.print();
+      std::cout << std::endl;
     }
   }
 }
