@@ -31,6 +31,7 @@ import os
 import requests
 from pathlib import Path
 import subprocess
+import tempfile
 
 import neml2
 from neml2.reader import describe
@@ -86,8 +87,11 @@ class ArgoClient(LLMClient):
 # use the neml2-syntax tool to extract the syntax database from the C++ backend
 bin = Path(neml2.__path__[0]) / "bin"
 result = subprocess.run([str(bin / "neml2-syntax")], capture_output=True, text=True)
-syntax = result.stdout
-syntax_db = SyntaxDB(syntax=syntax)
+with tempfile.NamedTemporaryFile("w", suffix=".yml", delete=False) as handle:
+    handle.write(result.stdout)
+    syntax_path = Path(handle.name)
+
+syntax_db = SyntaxDB(syntax_path)
 ```
 
 ## Build the prompt
