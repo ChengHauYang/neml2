@@ -19,6 +19,7 @@ INPUT_FILE = Path(
 
 INCLUDE_PARAMS = True
 ARGO_URL = "https://apps-dev.inside.anl.gov/argoapi/api/v1/resource/chat/"
+ARGO_TIMEOUT_SECONDS = float(os.environ.get("ARGO_TIMEOUT_SECONDS", "120"))
 
 
 def find_syntax_exe() -> Path:
@@ -56,11 +57,23 @@ class ArgoClient(LLMClient):
             "top_p": 0.9,
             "max_completion_tokens": 64000,
         }
-        response = requests.post(
-            ARGO_URL,
-            data=json.dumps(payload),
-            headers={"Content-Type": "application/json"},
-        )
+        try:
+            response = requests.post(
+                ARGO_URL,
+                data=json.dumps(payload),
+                headers={"Content-Type": "application/json"},
+                timeout=ARGO_TIMEOUT_SECONDS,
+            )
+        except requests.Timeout as exc:
+            raise RuntimeError(
+                "Argo API request timed out after "
+                f"{ARGO_TIMEOUT_SECONDS} seconds. "
+                "The server may be queued or taking too long to generate a response. "
+                "Try increasing ARGO_TIMEOUT_SECONDS or reducing the prompt size."
+            ) from exc
+        except requests.RequestException as exc:
+            raise RuntimeError(f"Argo API request failed: {exc}") from exc
+
         if response.status_code != 200:
             raise RuntimeError(
                 f"Argo API request failed with status {response.status_code}: {response.text}"
@@ -89,14 +102,26 @@ def main():
         syntax_db = SyntaxDB(syntax_path)
 
         system_prompt, user_prompt = describe(INPUT_FILE, syntax_db, include_params=INCLUDE_PARAMS)
+        print(
+            "Prepared prompt "
+            f"(system={len(system_prompt)} chars, user={len(user_prompt)} chars)."
+        )
 
-        argo_user = os.environ.get("ARGO_USER", "chenghau.yang")
-        if argo_user == "chenghau.yang":
+        argo_user = os.environ.get("ARGO_USER", "").strip()
+        if not argo_user or argo_user.lower() in {
+            "your-anl-username",
+            "your-argo-username",
+            "set-me",
+        }:
             raise RuntimeError(
                 "Set ARGO_USER to your actual Argo username before running the LLM call."
             )
 
         client = ArgoClient(model="gpt54", user=argo_user)
+        print(
+            f"Sending request to Argo at {ARGO_URL} "
+            f"with timeout={ARGO_TIMEOUT_SECONDS}s..."
+        )
         response = client.complete(system_prompt, user_prompt)
         print(response)
     finally:
