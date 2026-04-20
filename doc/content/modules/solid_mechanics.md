@@ -24,6 +24,42 @@ Below is an example input file that defines a linear elasticity model.
 
 @list-input:tests/unit/models/solid_mechanics/elasticity/LinearIsotropicElasticity.i:Models
 
+## Cohesive traction-separation laws
+
+Traction-separation laws describe the local interface response between two surfaces in terms of the
+displacement jump \f$ \llbracket \mathbf{u} \rrbracket = [\delta_n, \delta_{t1}, \delta_{t2}]^T
+\f$ and the interface traction \f$ \mathbf{T} = [T_n, T_{t1}, T_{t2}]^T \f$. In NEML2 these
+models consume `forces/interface_displacement_jump` and produce `state/interface_traction`, with
+history variables added only by the irreversible laws.
+
+The simplest cohesive law is the purely elastic relation
+
+\f[
+  \mathbf{T} = \mathbf{K} \llbracket \mathbf{u} \rrbracket, \qquad
+  \mathbf{K} = \operatorname{diag}(K_n, K_t, K_t).
+\f]
+
+More dissipative options are also available:
+
+- `ExpTractionSeparation`: exponential softening driven by an effective jump norm and optional
+  irreversibility.
+- `SalehaniIrani3DCTraction`: exponential mixed-mode law with linear normal and quadratic
+  tangential contributions to the exponent.
+- `BiLinearMixedModeTraction`: bilinear mixed-mode damage evolution with BK or power-law fracture
+  criteria, lagged mode-mixity options, and viscous regularization.
+
+Below is a minimal cohesive input example.
+
+```python
+[Models]
+  [cohesive]
+    type = PureElasticTractionSeparation
+    normal_stiffness = 10.0
+    tangent_stiffness = 4.0
+  []
+[]
+```
+
 ## Plasticity (macroscale)
 
 Generally speaking, plasticity models describe (oftentimes irreversible and dissipative) history-dependent deformation of solid materials. The plastic deformation is governed by the plastic loading/unloading conditions (or more generally the Karush-Kuhn-Tucker conditions):
