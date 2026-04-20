@@ -375,4 +375,34 @@ where now \f$ \dot{\gamma}_i \f$, the slip rate on each system, is the constitut
 
 Ancillary classes automatically generate lists of slip and twin systems from the crystal sytem, so the user does not need to manually provide these themselves.
 
-NEML2 uses *modified* Rodrigues parameters to define orientations internally.  These can be converted to Euler angles, quaternions, etc. for output.
+## Cohesive Zone Models
+
+Cohesive zone models (CZM) describe the relationship between traction \f$ \mathbf{T} \f$ and displacement jump \f$ \boldsymbol{\delta} \f$ across an interface. The displacement jump is typically ordered as \f$ [\delta_n, \delta_{s1}, \delta_{s2}] \f$.
+
+### Purely elastic CZM
+
+The purely elastic CZM assumes a linear relationship between traction and displacement jump:
+\f[
+  \mathbf{T} = \mathbf{K} \cdot \boldsymbol{\delta}
+\f]
+where \f$ \mathbf{K} = \operatorname{diag}(K_n, K_t, K_t) \f$ is the interface stiffness matrix.
+
+Below is an example input file for a purely elastic CZM.
+
+@list-input:tests/unit/models/solid_mechanics/cohesive_zone/PureElasticTractionSeparation.i:Models
+
+### Exponential CZM
+
+The exponential CZM uses an exponential softening law. A common form is:
+\f[
+  \mathbf{T} = (1-d) \frac{G_c}{\delta_0^2} \boldsymbol{\delta}
+\f]
+where \f$ d = 1 - \exp(-\delta_{eff}/\delta_0) \f$ is the damage variable, and \f$ \delta_{eff} \f$ is an effective displacement jump.
+
+@list-input:tests/unit/models/solid_mechanics/cohesive_zone/ExpTractionSeparation.i:Models
+
+### Bilinear mixed-mode CZM
+
+The bilinear mixed-mode CZM (Camanho et al., 2003) uses a bilinear softening law with mode-mixity accounted for using the Benzeggagh-Kenane (BK) or power-law criterion.
+
+@list-input:tests/unit/models/solid_mechanics/cohesive_zone/BiLinearMixedModeTraction.i:Models
