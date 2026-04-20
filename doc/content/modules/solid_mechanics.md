@@ -255,6 +255,18 @@ The example input file below defines associative \f$ J_2 \f$ flow rules
 
 In the above example, a model named "normality" is used to compute the associative flow directions, and the rates of the internal variables are mapped using the rate of the consistency parameter and each of the associative flow direction. The cross-referenced model named "flow" (omitted in the example) is the composition of models defining the yield function \f$ f^p \f$ in terms of the variational arguments \f$ \boldsymbol{\sigma} \f$, \f$ k \f$, and \f$ \boldsymbol{X} \f$.
 
+## Cohesive traction-separation laws
+
+Traction-separation laws relate the local interface displacement jump \f$ \llbracket \boldsymbol{u} \rrbracket \f$
+to the local interface traction \f$ \boldsymbol{T} \f$. NEML2 provides a common
+`TractionSeparationLaw` interface together with several concrete cohesive laws:
+`PureElasticTractionSeparation`, `ExpTractionSeparation`,
+`SalehaniIrani3DCTraction`, and `BiLinearMixedModeTractionSeparation`.
+
+Below is an example input file for the bilinear mixed-mode law.
+
+@list-input:tests/unit/models/solid_mechanics/BiLinearMixedModeTractionSeparation.i:Models
+
 
 ## Mixed stress/strain control
 
