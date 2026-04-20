@@ -375,4 +375,49 @@ where now \f$ \dot{\gamma}_i \f$, the slip rate on each system, is the constitut
 
 Ancillary classes automatically generate lists of slip and twin systems from the crystal sytem, so the user does not need to manually provide these themselves.
 
-NEML2 uses *modified* Rodrigues parameters to define orientations internally.  These can be converted to Euler angles, quaternions, etc. for output.
+## Traction-Separation Laws
+
+Traction-separation laws (TSLs) describe the relationship between the displacement jump \f$ \boldsymbol{\delta} \f$ across an interface and the traction \f$ \boldsymbol{T} \f$ acting on it. These models are typically used in Cohesive Zone Modeling (CZM).
+
+### Linear Elastic Traction-Separation
+
+The simplest TSL is purely linear elastic:
+
+\f[
+  \boldsymbol{T} = \mathbf{K} \cdot \boldsymbol{\delta}
+\f]
+
+where \f$ \mathbf{K} = \operatorname{diag}(K_n, K_t, K_t) \f$ is the stiffness tensor.
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/PureElasticTractionSeparation.i:Models
+
+### Exponential Traction-Separation
+
+Exponential softening laws introduce a damage variable \f$ d \f$ that evolves with the effective displacement jump \f$ \delta_{eff} \f$:
+
+\f{align*}
+  \delta_{eff} &= \sqrt{\delta_n^2 + \beta \delta_t^2 + \epsilon} \\
+  d &= 1 - \exp(-\delta_{eff} / \delta_0) \\
+  \boldsymbol{T} &= (1 - d) \frac{G_c}{\delta_0^2} \boldsymbol{\delta}
+\f}
+
+where \f$ G_c \f$ is the fracture energy and \f$ \delta_0 \f$ is a softening length scale.
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/ExpTractionSeparation.i:Models
+
+### Bilinear Mixed-Mode Traction-Separation
+
+The bilinear mixed-mode model uses a damage variable \f$ d \f$ and considers Mode I (opening) and Mode II/III (shear) behavior with mixed-mode criteria such as BK or Power Law.
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/BiLinearMixedModeTraction.i:Models
+
+### Salehani & Irani (2018) 3D Coupled Traction-Separation
+
+A coupled exponential law with different behavior in normal and shear directions:
+
+\f{align*}
+  x &= \frac{\delta_n}{\delta_{u0,n}} + \left(\frac{\delta_{s1}}{\delta_{u0,s}}\right)^2 + \left(\frac{\delta_{s2}}{\delta_{u0,s}}\right)^2 \\
+  T_i &= a_i \frac{\delta_i}{\delta_{u0,i}} \exp(-x)
+\f}
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/SalehaniIrani3DCTraction.i:Models
