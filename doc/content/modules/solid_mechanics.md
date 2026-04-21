@@ -376,3 +376,83 @@ where now \f$ \dot{\gamma}_i \f$, the slip rate on each system, is the constitut
 Ancillary classes automatically generate lists of slip and twin systems from the crystal sytem, so the user does not need to manually provide these themselves.
 
 NEML2 uses *modified* Rodrigues parameters to define orientations internally.  These can be converted to Euler angles, quaternions, etc. for output.
+
+## Cohesive Zone / Traction-Separation Laws
+
+Cohesive zone models (CZMs) describe the relationship between the displacement jump \f$ \boldsymbol{\delta} \f$ across a fracture surface and the resulting traction \f$ \mathbf{T} \f$.  NEML2 decomposes the displacement jump into one normal component \f$ \delta_n \f$ and two in-plane shear components \f$ \delta_{s1}, \delta_{s2} \f$:
+
+\f[
+  \boldsymbol{\delta} = (\delta_n,\; \delta_{s1},\; \delta_{s2})^\top
+\f]
+
+and correspondingly returns the traction vector \f$ \mathbf{T} = (T_n, T_{s1}, T_{s2})^\top \f$.
+
+### PureElasticTractionSeparation
+
+A baseline linear-elastic (undamaged) cohesive law:
+
+\f[
+  T_n   = K_n \,\delta_n, \quad
+  T_{s1} = K_s \,\delta_{s1}, \quad
+  T_{s2} = K_s \,\delta_{s2}
+\f]
+
+where \f$ K_n \f$ is the normal penalty stiffness and \f$ K_s \f$ is the shear penalty stiffness. Compression (\f$ \delta_n < 0 \f$) is handled by a smooth Macaulay bracket so that the normal stiffness is only active in tension; the shear stiffness is always active.
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/PureElasticTractionSeparation.i:Models
+
+### SalehaniIrani3DCTraction
+
+Exponential cohesive law from Salehani & Irani (2018). The traction components are:
+
+\f{align*}
+  T_n   &= a_n \frac{\delta_n}{\delta_{u0,n}} e^{-x}, \\
+  T_{s1} &= a_s \frac{\delta_{s1}}{\delta_{u0,s}} e^{-x}, \\
+  T_{s2} &= a_s \frac{\delta_{s2}}{\delta_{u0,s}} e^{-x},
+\f}
+
+where the exponent couples normal and shear:
+\f[
+  x = \frac{\delta_n}{\delta_{u0,n}} + \frac{\delta_{s1}^2 + \delta_{s2}^2}{\delta_{u0,s}^2},
+\f]
+and the prefactors are \f$ a_n = e \, T_{n,\max} \f$, \f$ a_s = \sqrt{2e} \, T_{s,\max} \f$, \f$ \delta_{u0,s} = \sqrt{2} \, \delta_{u0,t} \f$.
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/SalehaniIrani3DCTraction.i:Models
+
+### ExpTractionSeparation
+
+Isotropic exponential softening law based on an effective displacement jump. The effective jump is:
+
+\f[
+  \delta_\text{eff} = \sqrt{\delta_n^2 + \beta (\delta_{s1}^2 + \delta_{s2}^2)}
+\f]
+
+where \f$ \beta \f$ weights the tangential contribution. The scalar damage variable follows:
+
+\f[
+  d = 1 - \exp\!\left(-\frac{\delta_\text{eff}}{\delta_0}\right)
+\f]
+
+and the traction is \f$ \mathbf{T} = (1-d)\,c\,\boldsymbol{\delta} \f$ with \f$ c = G_c / \delta_0^2 \f$.
+
+Irreversibility is enforced by tracking the historical maximum effective jump.  When `irreversible_damage = true`, \f$ \delta_\text{eff} \f$ is replaced by \f$ \max(\delta_\text{eff}, \delta_{\text{eff},\max}^\text{old}) \f$.
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/ExpTractionSeparation.i:Models
+
+### BiLinearMixedModeTraction
+
+Bilinear mixed-mode cohesive law with Benzeggagh–Kenane (BK) or power-law fracture criterion. Damage initiates when the effective mixed-mode displacement \f$ \delta_m = \sqrt{\langle\delta_n\rangle^2 + \delta_{s1}^2 + \delta_{s2}^2} \f$ exceeds the initiation threshold:
+
+\f[
+  \delta_\text{init} = \frac{\delta_{n0}\,\delta_{s0}\,\sqrt{1+\beta^2}}{\sqrt{\delta_{s0}^2 + \beta^2 \delta_{n0}^2}}
+\f]
+
+where \f$ \beta = \delta_s / \delta_n \f$ is the mode-mixity ratio, \f$ \delta_{n0} = N/K \f$, and \f$ \delta_{s0} = S/K \f$. The final failure displacement is determined by the BK criterion:
+
+\f[
+  G_c(\beta) = G_{Ic} + (G_{IIc} - G_{Ic})\left(\frac{\beta^2}{1+\beta^2}\right)^\eta
+\f]
+
+giving \f$ \delta_\text{final} = 2G_c / (K\,\delta_\text{init}) \f$. The damage evolves linearly between initiation and final failure and is irreversible (monotonically non-decreasing).  Viscous regularization and optional lagging of the mode-mixity ratio are also supported.
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/BiLinearMixedModeTraction.i:Models
