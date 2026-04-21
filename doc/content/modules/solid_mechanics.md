@@ -24,6 +24,64 @@ Below is an example input file that defines a linear elasticity model.
 
 @list-input:tests/unit/models/solid_mechanics/elasticity/LinearIsotropicElasticity.i:Models
 
+## Traction-Separation Laws
+
+Traction-separation laws map the local interface displacement jump
+\f$ \boldsymbol{\delta} = [\delta_n,\delta_{s1},\delta_{s2}] \f$ to the local interface traction
+\f$ \boldsymbol{T} = [T_n,T_{s1},T_{s2}] \f$. The base input and output variable paths are
+`state/interface/displacement_jump` and `state/interface/traction`.
+
+The `PureElasticTractionSeparation` model uses uncoupled normal and tangential stiffnesses:
+
+\f[
+  \boldsymbol{T} =
+  \begin{bmatrix}
+    K_n & 0 & 0 \\
+    0 & K_t & 0 \\
+    0 & 0 & K_t
+  \end{bmatrix}
+  \boldsymbol{\delta}.
+\f]
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/PureElasticTractionSeparation.i:Models
+
+The `SalehaniIrani3DCTraction` model defines an exponential local traction law. The normal gap
+enters the exponent linearly, while the two shear gaps enter quadratically:
+
+\f[
+  x = \frac{\delta_n}{\delta_{n0}} +
+      \left(\frac{\delta_{s1}}{\sqrt{2}\delta_{s0}}\right)^2 +
+      \left(\frac{\delta_{s2}}{\sqrt{2}\delta_{s0}}\right)^2,
+  \qquad
+  T_i = a_i \frac{\delta_i}{\delta_{i0}} \exp(-x).
+\f]
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/SalehaniIrani3DCTraction.i:Models
+
+The `ExpTractionSeparation` model computes an effective jump
+\f$ \delta_{\mathrm{eff}} = \sqrt{\delta_n^2 + \beta(\delta_{s1}^2+\delta_{s2}^2)+\epsilon} \f$,
+optionally replaces it by its historical maximum, and applies
+
+\f[
+  d = 1 - \exp\left(-\frac{\delta_{\mathrm{eff}}}{\delta_0}\right),
+  \qquad
+  \boldsymbol{T} = (1-d)\frac{G_c}{\delta_0^2}\boldsymbol{\delta}.
+\f]
+
+It also outputs `state/internal/effective_displacement_jump_max`,
+`state/internal/interface_damage`, and `state/interface/effective_displacement_jump`.
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/ExpTractionSeparation.i:Models
+
+The `BiLinearMixedModeTraction` model computes a scalar damage variable from the mixed-mode
+effective jump. It supports `BK` and `POWER_LAW` mixed-mode propagation criteria, damage
+irreversibility through `state/internal/interface_damage`, optional lagging of mode mixity and
+effective jump calculations, and viscous regularization through `viscosity` and `time_step`. The
+normal traction uses a regularized positive/negative split, so tensile opening is degraded while
+compressive normal closure remains elastic.
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/BiLinearMixedModeTraction.i:Models
+
 ## Plasticity (macroscale)
 
 Generally speaking, plasticity models describe (oftentimes irreversible and dissipative) history-dependent deformation of solid materials. The plastic deformation is governed by the plastic loading/unloading conditions (or more generally the Karush-Kuhn-Tucker conditions):
