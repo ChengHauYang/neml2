@@ -567,3 +567,107 @@ where now \f$ \dot{\gamma}_i \f$, the slip rate on each system, is the constitut
 Ancillary classes automatically generate lists of slip and twin systems from the crystal sytem, so the user does not need to manually provide these themselves.
 
 NEML2 uses *modified* Rodrigues parameters to define orientations internally.  These can be converted to Euler angles, quaternions, etc. for output.
+
+## Cohesive traction-separation laws
+
+Cohesive (or traction-separation) laws map a 3-component displacement jump in the local interface frame, \f$ \boldsymbol{\delta} = [\delta_n, \delta_{s1}, \delta_{s2}] \f$ (normal and two tangential), to a traction \f$ \boldsymbol{T} = [T_n, T_{s1}, T_{s2}] \f$ in the same frame. They are the constitutive ingredient of cohesive zone models.
+
+All NEML2 traction-separation laws inherit from the abstract `TractionSeparation` base class, which declares the input variable `displacement_jump` and the output variable `traction`. The available variants share that interface and differ only in the form of the response.
+
+### Linear elastic (penalty) law
+
+`PureElasticTractionSeparation` is a diagonal linear law:
+
+\f[
+  T_n = K_n\,\delta_n,\quad T_{s1} = K_t\,\delta_{s1},\quad T_{s2} = K_t\,\delta_{s2}
+\f]
+
+with normal stiffness \f$ K_n \f$ and isotropic tangential stiffness \f$ K_t \f$. It has no internal state and the same stiffness applies in opening and closing.
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/PureElasticTractionSeparation.i:Models
+
+### Salehani-Irani 3D coupled exponential law
+
+`SalehaniIrani3DCTraction` is a smooth, fully coupled exponential law in which normal and shear modes share a single decay factor \f$ \exp(-x) \f$. With \f$ \delta_{u,n} \f$ the normal characteristic gap, \f$ \delta_{u,t} = \sqrt{2}\,\delta_{u,t}^\text{raw} \f$ the (internally rescaled) tangential characteristic gap, \f$ T_n^\text{max} \f$ and \f$ T_t^\text{max} \f$ the peak normal and shear tractions:
+
+\f[
+  x = \frac{\delta_n}{\delta_{u,n}} + \left(\frac{\delta_{s1}}{\delta_{u,t}}\right)^2 + \left(\frac{\delta_{s2}}{\delta_{u,t}}\right)^2
+\f]
+
+\f[
+  T_n = e\,T_n^\text{max}\,\frac{\delta_n}{\delta_{u,n}}\,e^{-x},\qquad
+  T_{s_i} = \sqrt{2 e}\,T_t^\text{max}\,\frac{\delta_{s_i}}{\delta_{u,t}}\,e^{-x}
+\f]
+
+There is no compression cutoff: a negative normal jump produces a (physically attractive) negative normal traction. Pair with a contact penalty if interpenetration is possible. The law is purely path-independent and has no internal state.
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/SalehaniIrani3DCTraction.i:Models
+
+### Exponential cohesive law with irreversible damage
+
+`ExpTractionSeparation` is an exponential damage law driven by the historic maximum of an effective scalar jump. Define
+
+\f[
+  \delta_\text{eff} = \sqrt{\delta_n^2 + \beta(\delta_{s1}^2 + \delta_{s2}^2) + \epsilon},\qquad
+  \bar{\delta} = \max(\delta_\text{eff},\,\bar{\delta}^{n-1})
+\f]
+
+where \f$ \beta \f$ weights the tangential contribution and \f$ \epsilon \f$ is a small regularizer. Damage is
+
+\f[
+  d = 1 - \exp\!\left(-\bar{\delta}/\delta_0\right)
+\f]
+
+and the traction is uniformly degraded:
+
+\f[
+  \boldsymbol{T} = (1-d)\,\frac{G_c}{\delta_0^2}\,\boldsymbol{\delta}.
+\f]
+
+The historic maximum \f$ \bar{\delta} \f$ is exposed as the output `effective_displacement_jump_max`; the previous step's value is consumed as the input `effective_displacement_jump_max~1`. This makes the response strictly irreversible: unloading retains the damage acquired at the historic peak.
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/ExpTractionSeparation.i:Models
+
+### Bilinear mixed-mode law
+
+`BiLinearMixedModeTraction` implements the Camanho-Davila bilinear envelope with the Benzeggagh-Kenane (`BK`) or power-law (`POWER_LAW`) mixed-mode propagation criterion. Damage is irreversible, and a Macaulay split on the normal jump preserves the penalty stiffness \f$ K \f$ in compression so interpenetration does not soften the interface.
+
+Let \f$ \delta_n^+ = \langle \delta_n \rangle \f$ and \f$ \delta_s = \sqrt{\delta_{s1}^2 + \delta_{s2}^2} \f$. For opening (\f$ \delta_n > 0 \f$) the mode-mixity ratio is \f$ \beta = \delta_s / \delta_n^+ \f$. Define the single-mode initiation jumps \f$ \delta_n^0 = N/K \f$ and \f$ \delta_s^0 = S/K \f$ and the mixed-mode initiation jump
+
+\f[
+  \delta_\text{init} = \delta_n^0\,\delta_s^0\,\frac{\sqrt{1+\beta^2}}{\sqrt{(\delta_s^0)^2 + \beta^2(\delta_n^0)^2}}.
+\f]
+
+Under the BK criterion the full-degradation jump is
+
+\f[
+  \delta_\text{final} = \frac{2}{K\,\delta_\text{init}}\left[G_{Ic} + (G_{IIc}-G_{Ic})\,\left(\frac{\beta^2}{1+\beta^2}\right)^{\eta}\right]
+\f]
+
+and under the power-law criterion
+
+\f[
+  \delta_\text{final} = \frac{2(1+\beta^2)}{K\,\delta_\text{init}}\,\left[\left(\frac{1}{G_{Ic}}\right)^{\eta} + \left(\frac{\beta^2}{G_{IIc}}\right)^{\eta}\right]^{-1/\eta}.
+\f]
+
+For pure-shear loading (\f$ \delta_n \le 0 \f$) the model uses the limiting values \f$ \delta_\text{init} = \delta_s^0 \f$ and \f$ \delta_\text{final} = 2\sqrt{2}\,G_{IIc}/S \f$.
+
+The current effective jump is \f$ \delta_m = \sqrt{(\delta_n^+)^2 + \delta_s^2} \f$, and the trial damage is the bilinear envelope
+
+\f[
+  d_\text{trial} = \begin{cases}
+    0 & \delta_m < \delta_\text{init} \\
+    \dfrac{\delta_\text{final}\,(\delta_m - \delta_\text{init})}{\delta_m\,(\delta_\text{final} - \delta_\text{init})} & \delta_\text{init} \le \delta_m \le \delta_\text{final} \\
+    1 & \delta_m > \delta_\text{final}
+  \end{cases}
+\f]
+
+clamped by irreversibility \f$ d = \max(d_\text{trial},\,d^{n-1}) \f$. The traction restores the compressive stiffness in the inactive normal direction:
+
+\f[
+  \boldsymbol{T} = K(1-d)\,(\delta_n^+,\,\delta_{s1},\,\delta_{s2}) + K\,(\delta_n - \delta_n^+,\,0,\,0).
+\f]
+
+Variable derivatives of this model are supplied by automatic differentiation (`request_AD`) because the analytical Jacobian through the mode-mixity, criterion, damage-regime, irreversibility, and Macaulay branches is too brittle to maintain by hand. Viscous regularization and lagged mode-mixity / displacement-jump options are not exposed in this implementation.
+
+@list-input:tests/unit/models/solid_mechanics/traction_separation/BiLinearMixedModeTraction.i:Models
