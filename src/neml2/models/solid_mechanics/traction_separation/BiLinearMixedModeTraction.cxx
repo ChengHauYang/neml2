@@ -25,7 +25,10 @@
 #include "neml2/models/solid_mechanics/traction_separation/BiLinearMixedModeTraction.h"
 #include "neml2/tensors/Scalar.h"
 #include "neml2/tensors/Vec.h"
+#include "neml2/tensors/R2.h"
+#include "neml2/tensors/functions/heaviside.h"
 #include "neml2/tensors/functions/macaulay.h"
+#include "neml2/tensors/functions/outer.h"
 #include "neml2/tensors/functions/pow.h"
 #include "neml2/tensors/functions/sqrt.h"
 #include "neml2/tensors/functions/where.h"
@@ -84,94 +87,210 @@ BiLinearMixedModeTraction::BiLinearMixedModeTraction(const OptionSet & options)
 }
 
 void
-BiLinearMixedModeTraction::request_AD()
+BiLinearMixedModeTraction::set_value(bool out, bool dout_din, bool /*d2out_din2*/)
 {
-  // Hand-rolling the analytical Jacobian through the mode-mixity branch, the
-  // criterion branch, the damage-regime branch, the Macaulay split, and the
-  // irreversibility max-clamp is too brittle to be worth the maintenance cost.
-  Model::request_AD(_T, _delta);
-  Model::request_AD(_T, _d_old);
-  Model::request_AD(_d, _delta);
-  Model::request_AD(_d, _d_old);
-}
-
-void
-BiLinearMixedModeTraction::set_value(bool out, bool /*dout_din*/, bool /*d2out_din2*/)
-{
-  if (!out)
-    return;
-
+  // ============================================================
+  // Forward
+  // ============================================================
   const auto dn = _delta()(0);
   const auto ds1 = _delta()(1);
   const auto ds2 = _delta()(2);
 
   const auto zero_s = Scalar::zeros_like(dn);
   const auto one_s = Scalar::ones_like(dn);
+  const auto zero_v = Vec::zeros_like(_delta());
 
-  // Macaulay split on the normal jump
+  // Macaulay split on the normal jump.
+  // H = d(macaulay)/d(dn): 1 in opening, 0 in compression.
   const auto delta_n_pos = neml2::macaulay(dn);
   const auto delta_n_neg = dn - delta_n_pos;
+  const auto H = neml2::heaviside(dn);
+  const auto one_minus_H = 1.0 - H;
 
-  // Tangential magnitude (regularized so its derivative is finite at zero)
+  // Tangential magnitude (regularized so its derivative is finite at zero).
   const auto delta_s_sq = ds1 * ds1 + ds2 * ds2;
   const auto delta_s = neml2::sqrt(delta_s_sq + _eps);
 
-  // Mode mixity ratio beta = delta_s / delta_n is only defined for opening (delta_n > 0).
-  // Use a safe denominator in the false branch so torch's autograd does not see NaN
-  // gradients in the unused path.
+  // Mode mixity beta = delta_s / delta_n is only meaningful for opening.
+  // The "safe" denominator gives finite values in the compression branch so
+  // the masked-off `where` doesn't trip on division by zero.
   const auto pos_mask = dn > 0.0;
   const auto safe_delta_n_pos = neml2::where(pos_mask, delta_n_pos, one_s);
-  const auto beta = neml2::where(pos_mask, delta_s / safe_delta_n_pos, zero_s);
+  const auto beta_open = delta_s / safe_delta_n_pos;
+  const auto beta = neml2::where(pos_mask, beta_open, zero_s);
   const auto beta_sq = beta * beta;
 
-  // Initiation displacement jump (mixed-mode, falls back to pure-shear when no opening)
+  // Initiation displacement jump (mixed-mode in opening, pure-shear in compression).
   const auto delta_normal0 = _N / _K;
   const auto delta_shear0 = _S / _K;
-  const auto delta_mixed_init =
-      neml2::sqrt(delta_shear0 * delta_shear0 + beta_sq * delta_normal0 * delta_normal0 + _eps);
+  const auto delta_mixed_init_sq =
+      delta_shear0 * delta_shear0 + beta_sq * delta_normal0 * delta_normal0 + _eps;
+  const auto delta_mixed_init = neml2::sqrt(delta_mixed_init_sq);
   const auto delta_init_mixed =
       delta_normal0 * delta_shear0 * neml2::sqrt(1.0 + beta_sq) / delta_mixed_init;
   const auto delta_init = neml2::where(pos_mask, delta_init_mixed, delta_shear0);
 
-  // Final (full-degradation) displacement jump
+  // Final (full-degradation) displacement jump per the active criterion.
+  // Both BK and POWER_LAW terms go through pow(); a tiny regularizer keeps
+  // pow(0, eta-1) finite when eta < 1 (it has no effect for typical eta in [1.5, 4]).
+  const auto Kdelta_init_mixed = _K * delta_init_mixed;
   Scalar delta_final_mixed = zero_s;
   if (_criterion == "BK")
   {
     const auto beta_sq_ratio = beta_sq / (1.0 + beta_sq);
-    // Adding a tiny constant to the base avoids 0^eta NaN gradients in the unused branch
-    const auto term = _GIc + (_GIIc - _GIc) * neml2::pow(beta_sq_ratio + _eps, _eta);
-    delta_final_mixed = 2.0 / (_K * delta_init) * term;
+    const auto pow_base_BK = beta_sq_ratio + _eps;
+    const auto term = _GIc + (_GIIc - _GIc) * neml2::pow(pow_base_BK, _eta);
+    delta_final_mixed = 2.0 / Kdelta_init_mixed * term;
   }
   else // POWER_LAW
   {
-    const auto Gc_mixed =
-        neml2::pow(1.0 / _GIc, _eta) + neml2::pow(beta_sq / _GIIc + _eps, _eta);
-    delta_final_mixed = (2.0 + 2.0 * beta_sq) / (_K * delta_init) * neml2::pow(Gc_mixed, -1.0 / _eta);
+    const auto pow_base_PL = beta_sq / _GIIc + _eps;
+    const auto Gc_mixed = neml2::pow(1.0 / _GIc, _eta) + neml2::pow(pow_base_PL, _eta);
+    delta_final_mixed = (2.0 + 2.0 * beta_sq) / Kdelta_init_mixed * neml2::pow(Gc_mixed, -1.0 / _eta);
   }
   const auto delta_final_default =
       Scalar::full_like(dn, std::sqrt(2.0)) * 2.0 * _GIIc / _S;
   const auto delta_final = neml2::where(pos_mask, delta_final_mixed, delta_final_default);
 
-  // Effective mixed-mode displacement jump
-  const auto delta_m =
-      neml2::sqrt(delta_n_pos * delta_n_pos + delta_s_sq + _eps);
+  // Effective mixed-mode displacement jump.
+  const auto delta_m = neml2::sqrt(delta_n_pos * delta_n_pos + delta_s_sq + _eps);
 
-  // Bilinear damage (with safe denominator so the unused branch gradient is finite)
-  const auto safe_denom = neml2::where(delta_final > delta_init, delta_final - delta_init, one_s);
-  const auto bilinear_d = delta_final * (delta_m - delta_init) / (delta_m * safe_denom);
+  // Bilinear damage (with safe denominator for the masked-off branches).
+  const auto df_minus_di = delta_final - delta_init;
+  const auto safe_df_minus_di = neml2::where(df_minus_di > 0.0, df_minus_di, one_s);
+  const auto bilinear_d = delta_final * (delta_m - delta_init) / (delta_m * safe_df_minus_di);
+  const auto linear_mask = (delta_m > delta_init) && (delta_m < delta_final);
   const auto d_trial =
       neml2::where(delta_m < delta_init,
                    zero_s,
                    neml2::where(delta_m < delta_final, bilinear_d, one_s));
 
-  // Irreversibility
-  const auto d = neml2::where(d_trial > _d_old(), d_trial, _d_old());
+  // Irreversibility: damage can only grow.
+  const auto advance_mask = d_trial > _d_old();
+  const auto d = neml2::where(advance_mask, d_trial, _d_old());
 
-  // Traction
-  const auto T_active = _K * (1.0 - d) * Vec::fill(delta_n_pos, ds1, ds2);
-  const auto T_inactive = _K * Vec::fill(delta_n_neg, zero_s, zero_s);
+  // Active/inactive split for traction.
+  const auto delta_active = Vec::fill(delta_n_pos, ds1, ds2);
+  const auto delta_inactive = Vec::fill(delta_n_neg, zero_s, zero_s);
+  const auto T_active = _K * (1.0 - d) * delta_active;
+  const auto T_inactive = _K * delta_inactive;
 
-  _T = T_active + T_inactive;
-  _d = d;
+  if (out)
+  {
+    _T = T_active + T_inactive;
+    _d = d;
+  }
+
+  if (!dout_din)
+    return;
+
+  // ============================================================
+  // Analytical Jacobians
+  // ============================================================
+
+  // ---- d(beta)/d(delta) in the opening branch ----
+  // dbeta/ddn = -delta_s / delta_n^2
+  // dbeta/dds_i = ds_i / (delta_s * delta_n)
+  const auto inv_dn = 1.0 / safe_delta_n_pos;
+  const auto inv_ds = 1.0 / delta_s; // delta_s is bounded below by sqrt(eps) > 0
+  const auto dbeta_ddn_open = -delta_s * inv_dn * inv_dn;
+  const auto dbeta_dds1_open = ds1 * inv_ds * inv_dn;
+  const auto dbeta_dds2_open = ds2 * inv_ds * inv_dn;
+  const auto dbeta_ddelta_open =
+      Vec::fill(dbeta_ddn_open, dbeta_dds1_open, dbeta_dds2_open);
+
+  // ---- d(delta_init)/d(delta) in the opening branch ----
+  // d(delta_init)/d(beta) = delta_init * beta * [1/(1+beta^2) - delta_n0^2/delta_mixed^2]
+  const auto ddelta_init_dbeta =
+      delta_init_mixed * beta *
+      (1.0 / (1.0 + beta_sq) - delta_normal0 * delta_normal0 / delta_mixed_init_sq);
+  const auto ddelta_init_ddelta_open = ddelta_init_dbeta * dbeta_ddelta_open;
+  const auto ddelta_init_ddelta = neml2::where(pos_mask, ddelta_init_ddelta_open, zero_v);
+
+  // ---- d(delta_final)/d(delta) in the opening branch ----
+  // Both criteria share the form delta_final = h(delta_init, beta), so
+  // d(delta_final)/d(delta) = (d/dinit)(delta_final) * d(init)/d(delta) +
+  //                            (d/dbeta)(delta_final) * d(beta)/d(delta).
+  Vec ddelta_final_ddelta_open = zero_v;
+  if (_criterion == "BK")
+  {
+    const auto beta_sq_ratio = beta_sq / (1.0 + beta_sq);
+    const auto pow_base_BK = beta_sq_ratio + _eps;
+    // d(delta_final)/d(delta_init) = -delta_final / delta_init
+    const auto ddelta_final_ddelta_init_BK = -delta_final_mixed / delta_init_mixed;
+    // d(beta_sq_ratio)/d(beta) = 2*beta / (1+beta^2)^2
+    const auto one_plus_beta_sq = 1.0 + beta_sq;
+    const auto dbeta_sq_ratio_dbeta = 2.0 * beta / (one_plus_beta_sq * one_plus_beta_sq);
+    // d(delta_final)/d(beta) = (2/(K*delta_init)) * (GIIc - GIc) * eta * (r+eps)^(eta-1) * dr/dbeta
+    const auto ddelta_final_dbeta_BK = (2.0 / Kdelta_init_mixed) * (_GIIc - _GIc) * _eta *
+                                       neml2::pow(pow_base_BK, _eta - 1.0) * dbeta_sq_ratio_dbeta;
+    ddelta_final_ddelta_open = ddelta_final_ddelta_init_BK * ddelta_init_ddelta_open +
+                               ddelta_final_dbeta_BK * dbeta_ddelta_open;
+  }
+  else // POWER_LAW
+  {
+    const auto pow_base_PL = beta_sq / _GIIc + _eps;
+    const auto Gc_mixed = neml2::pow(1.0 / _GIc, _eta) + neml2::pow(pow_base_PL, _eta);
+    const auto Gc_term = neml2::pow(Gc_mixed, -1.0 / _eta);
+    const auto prefactor = (2.0 + 2.0 * beta_sq) / Kdelta_init_mixed;
+    const auto dprefactor_dbeta = 4.0 * beta / Kdelta_init_mixed;
+    const auto ddelta_final_ddelta_init_PL = -prefactor / delta_init_mixed * Gc_term;
+    // dGc_mixed/dbeta = eta * (beta^2/GIIc + eps)^(eta-1) * (2*beta/GIIc)
+    const auto dGc_mixed_dbeta =
+        _eta * neml2::pow(pow_base_PL, _eta - 1.0) * (2.0 * beta / _GIIc);
+    // dGc_term/dbeta = (-1/eta) * Gc_mixed^(-1/eta - 1) * dGc_mixed/dbeta
+    const auto dGc_term_dbeta =
+        (-1.0 / _eta) * neml2::pow(Gc_mixed, -1.0 / _eta - 1.0) * dGc_mixed_dbeta;
+    const auto ddelta_final_dbeta_PL = dprefactor_dbeta * Gc_term + prefactor * dGc_term_dbeta;
+    ddelta_final_ddelta_open = ddelta_final_ddelta_init_PL * ddelta_init_ddelta_open +
+                               ddelta_final_dbeta_PL * dbeta_ddelta_open;
+  }
+  const auto ddelta_final_ddelta = neml2::where(pos_mask, ddelta_final_ddelta_open, zero_v);
+
+  // ---- d(delta_m)/d(delta) ----
+  // delta_m = sqrt(delta_n_pos^2 + delta_s_sq + eps).
+  // The normal component is delta_n_pos / delta_m, which already vanishes in compression.
+  const auto inv_dm = 1.0 / delta_m;
+  const auto ddelta_m_ddelta = Vec::fill(delta_n_pos * inv_dm, ds1 * inv_dm, ds2 * inv_dm);
+
+  // ---- d(d_trial)/d(delta) in the linear damage regime ----
+  // d_trial = delta_final * (delta_m - delta_init) / (delta_m * (delta_final - delta_init))
+  // Partials (derivation in design/.../BiLinearMixedModeTraction_spec_simple.md):
+  //   d/d(delta_m)     =  delta_final * delta_init / (delta_m^2 * (delta_final - delta_init))
+  //   d/d(delta_init)  =  delta_final * (delta_m - delta_final) / (delta_m * (delta_final - delta_init)^2)
+  //   d/d(delta_final) = -delta_init  * (delta_m - delta_init)  / (delta_m * (delta_final - delta_init)^2)
+  const auto inv_dm_sq = inv_dm * inv_dm;
+  const auto inv_df_minus_di = 1.0 / safe_df_minus_di;
+  const auto inv_df_minus_di_sq = inv_df_minus_di * inv_df_minus_di;
+  const auto dd_trial_ddm = delta_final * delta_init * inv_dm_sq * inv_df_minus_di;
+  const auto dd_trial_ddinit =
+      delta_final * (delta_m - delta_final) * inv_dm * inv_df_minus_di_sq;
+  const auto dd_trial_ddfinal =
+      -delta_init * (delta_m - delta_init) * inv_dm * inv_df_minus_di_sq;
+  const auto dd_trial_ddelta_linear = dd_trial_ddm * ddelta_m_ddelta +
+                                      dd_trial_ddinit * ddelta_init_ddelta +
+                                      dd_trial_ddfinal * ddelta_final_ddelta;
+  const auto dd_trial_ddelta = neml2::where(linear_mask, dd_trial_ddelta_linear, zero_v);
+
+  // ---- Irreversibility: d/dd_old picks up the frozen branch ----
+  const auto dd_ddelta = neml2::where(advance_mask, dd_trial_ddelta, zero_v);
+  const auto dd_dd_old = neml2::where(advance_mask, zero_s, one_s);
+
+  // ---- d(T)/d(delta) ----
+  // T = K*(1-d)*delta_active + K*delta_inactive
+  //   d(delta_active)/d(delta)   = diag(H, 1, 1)
+  //   d(delta_inactive)/d(delta) = diag(1-H, 0, 0)
+  // dT/d(delta) = K*(1-d) * diag(H, 1, 1) + K * diag(1-H, 0, 0)
+  //               - K * outer(delta_active, dd/d(delta))
+  const auto active_jac = R2::fill(H, one_s, one_s);
+  const auto inactive_jac = R2::fill(one_minus_H, zero_s, zero_s);
+  _T.d(_delta) = _K * (1.0 - d) * active_jac + _K * inactive_jac -
+                 _K * neml2::outer(delta_active, dd_ddelta);
+
+  // ---- d(T)/d(d_old) = -K * delta_active * d(d)/d(d_old) ----
+  _T.d(_d_old) = -_K * delta_active * dd_dd_old;
+
+  _d.d(_delta) = dd_ddelta;
+  _d.d(_d_old) = dd_dd_old;
 }
 } // namespace neml2
