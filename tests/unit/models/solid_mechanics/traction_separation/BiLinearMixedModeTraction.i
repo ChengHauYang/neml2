@@ -15,17 +15,15 @@
     output_Scalar_names = 'damage'
     output_Scalar_values = '0.5926889810380374'
 
-    # FD against AD on a deeply branched forward needs a looser tolerance: the bilinear
-    # damage law has a stiff slope (~140 per unit jump in some components) and forward FD
-    # at h=1e-6 has visible truncation error.
+    # FD on the bilinear damage law has a stiff slope (~140 per unit jump in some
+    # components) and visible h=1e-6 truncation error; loosen the variable-derivative
+    # tolerance accordingly.
     derivative_abs_tol = 1e-5
     derivative_rel_tol = 1e-3
-    parameter_derivative_abs_tol = 1e-5
-    parameter_derivative_rel_tol = 1e-3
 
     check_values = true
     check_derivatives = true
-    # Second derivatives are not declared by the model
+    # Second derivatives are not declared by the model.
     check_second_derivatives = false
   []
 []
@@ -33,8 +31,9 @@
 [Models]
   [model]
     type = BiLinearMixedModeTraction
-    # AD-backed derivatives are incompatible with TorchScript tracing of the where()-heavy
-    # forward graph (the tracer rejects grad-requiring tensors used as where-conditions).
+    # Disable TorchScript tracing: the where()-conditions involve multiple grad-tracking
+    # intermediates (delta_m vs delta_init/delta_final) which the tracer rejects.
+    # The analytical Jacobian itself is exact; only the JIT graph caching is bypassed.
     jit = false
     penalty_stiffness = 1.0e4
     mode_I_fracture_energy = 1.0

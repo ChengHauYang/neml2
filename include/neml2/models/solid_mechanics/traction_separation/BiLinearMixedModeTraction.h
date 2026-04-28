@@ -38,10 +38,6 @@ class Scalar;
  * Benzeggagh-Kenane (BK) or power-law mixed-mode propagation criterion. Damage
  * is irreversible. The normal compressive branch is restored through a Macaulay
  * split so interpenetration does not soften the interface.
- *
- * Derivatives are computed by automatic differentiation: the analytical Jacobian
- * has many nested branches (mode-mixity, criterion, damage regime, irreversibility,
- * normal compression) whose hand-derived chain rule is brittle.
  */
 class BiLinearMixedModeTraction : public TractionSeparation
 {
@@ -52,7 +48,6 @@ public:
 
 protected:
   void set_value(bool out, bool dout_din, bool d2out_din2) override;
-  void request_AD() override;
 
   /// Damage variable (output)
   Variable<Scalar> & _d;

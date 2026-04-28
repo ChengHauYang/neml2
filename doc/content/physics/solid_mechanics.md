@@ -668,6 +668,6 @@ clamped by irreversibility \f$ d = \max(d_\text{trial},\,d^{n-1}) \f$. The tract
   \boldsymbol{T} = K(1-d)\,(\delta_n^+,\,\delta_{s1},\,\delta_{s2}) + K\,(\delta_n - \delta_n^+,\,0,\,0).
 \f]
 
-Variable derivatives of this model are supplied by automatic differentiation (`request_AD`) because the analytical Jacobian through the mode-mixity, criterion, damage-regime, irreversibility, and Macaulay branches is too brittle to maintain by hand. Viscous regularization and lagged mode-mixity / displacement-jump options are not exposed in this implementation.
+Variable derivatives are computed analytically by chain-ruling through the mode-mixity, initiation, criterion, damage-regime, irreversibility, and Macaulay branches; the partials are documented in the design spec under `design/traction_separation_law/`. Viscous regularization and lagged mode-mixity / displacement-jump options are not exposed in this implementation.
 
 @list-input:tests/unit/models/solid_mechanics/traction_separation/BiLinearMixedModeTraction.i:Models
