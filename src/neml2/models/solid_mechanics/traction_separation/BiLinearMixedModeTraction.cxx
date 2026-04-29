@@ -58,9 +58,7 @@ BiLinearMixedModeTraction::expected_options()
 
   EnumSelection criterion({"BK", "POWER_LAW"}, "BK");
   options.add<EnumSelection>(
-      "criterion",
-      criterion,
-      "Mixed-mode propagation criterion. Options are: " + criterion.join());
+      "criterion", criterion, "Mixed-mode propagation criterion. Options are: " + criterion.join());
   options.add<double>("epsilon",
                       1e-16,
                       "Small regularizer added inside sqrt() to keep its derivative bounded at "
@@ -114,7 +112,11 @@ BiLinearMixedModeTraction::set_value(bool out, bool dout_din, bool /*d2out_din2*
   // Mode mixity beta = delta_s / delta_n is only meaningful for opening.
   // The "safe" denominator gives finite values in the compression branch so
   // the masked-off `where` doesn't trip on division by zero.
-  const auto pos_mask = dn > 0.0;
+  // All where()-conditions are detached because (1) `where` does not backpropagate
+  // through its condition, so the gradient information is unused, and (2) the
+  // TorchScript tracer rejects grad-tracking masks captured into the JIT graph
+  // ("Cannot insert a Tensor that requires grad as a constant.").
+  const auto pos_mask = (dn > 0.0).detach();
   const auto safe_delta_n_pos = neml2::where(pos_mask, delta_n_pos, one_s);
   const auto beta_open = delta_s / safe_delta_n_pos;
   const auto beta = neml2::where(pos_mask, beta_open, zero_s);
@@ -146,10 +148,10 @@ BiLinearMixedModeTraction::set_value(bool out, bool dout_din, bool /*d2out_din2*
   {
     const auto pow_base_PL = beta_sq / _GIIc + _eps;
     const auto Gc_mixed = neml2::pow(1.0 / _GIc, _eta) + neml2::pow(pow_base_PL, _eta);
-    delta_final_mixed = (2.0 + 2.0 * beta_sq) / Kdelta_init_mixed * neml2::pow(Gc_mixed, -1.0 / _eta);
+    delta_final_mixed =
+        (2.0 + 2.0 * beta_sq) / Kdelta_init_mixed * neml2::pow(Gc_mixed, -1.0 / _eta);
   }
-  const auto delta_final_default =
-      Scalar::full_like(dn, std::sqrt(2.0)) * 2.0 * _GIIc / _S;
+  const auto delta_final_default = Scalar::full_like(dn, std::sqrt(2.0)) * 2.0 * _GIIc / _S;
   const auto delta_final = neml2::where(pos_mask, delta_final_mixed, delta_final_default);
 
   // Effective mixed-mode displacement jump.
@@ -157,16 +159,18 @@ BiLinearMixedModeTraction::set_value(bool out, bool dout_din, bool /*d2out_din2*
 
   // Bilinear damage (with safe denominator for the masked-off branches).
   const auto df_minus_di = delta_final - delta_init;
-  const auto safe_df_minus_di = neml2::where(df_minus_di > 0.0, df_minus_di, one_s);
+  const auto df_minus_di_pos_mask = (df_minus_di > 0.0).detach();
+  const auto safe_df_minus_di = neml2::where(df_minus_di_pos_mask, df_minus_di, one_s);
   const auto bilinear_d = delta_final * (delta_m - delta_init) / (delta_m * safe_df_minus_di);
-  const auto linear_mask = (delta_m > delta_init) && (delta_m < delta_final);
+  const auto dm_lt_init_mask = (delta_m < delta_init).detach();
+  const auto dm_lt_final_mask = (delta_m < delta_final).detach();
+  const auto dm_gt_init_mask = (delta_m > delta_init).detach();
+  const auto linear_mask = (dm_gt_init_mask && dm_lt_final_mask).detach();
   const auto d_trial =
-      neml2::where(delta_m < delta_init,
-                   zero_s,
-                   neml2::where(delta_m < delta_final, bilinear_d, one_s));
+      neml2::where(dm_lt_init_mask, zero_s, neml2::where(dm_lt_final_mask, bilinear_d, one_s));
 
   // Irreversibility: damage can only grow.
-  const auto advance_mask = d_trial > _d_old();
+  const auto advance_mask = (d_trial > _d_old()).detach();
   const auto d = neml2::where(advance_mask, d_trial, _d_old());
 
   // Active/inactive split for traction.
@@ -196,8 +200,7 @@ BiLinearMixedModeTraction::set_value(bool out, bool dout_din, bool /*d2out_din2*
   const auto dbeta_ddn_open = -delta_s * inv_dn * inv_dn;
   const auto dbeta_dds1_open = ds1 * inv_ds * inv_dn;
   const auto dbeta_dds2_open = ds2 * inv_ds * inv_dn;
-  const auto dbeta_ddelta_open =
-      Vec::fill(dbeta_ddn_open, dbeta_dds1_open, dbeta_dds2_open);
+  const auto dbeta_ddelta_open = Vec::fill(dbeta_ddn_open, dbeta_dds1_open, dbeta_dds2_open);
 
   // ---- d(delta_init)/d(delta) in the opening branch ----
   // d(delta_init)/d(beta) = delta_init * beta * [1/(1+beta^2) - delta_n0^2/delta_mixed^2]
@@ -236,8 +239,7 @@ BiLinearMixedModeTraction::set_value(bool out, bool dout_din, bool /*d2out_din2*
     const auto dprefactor_dbeta = 4.0 * beta / Kdelta_init_mixed;
     const auto ddelta_final_ddelta_init_PL = -prefactor / delta_init_mixed * Gc_term;
     // dGc_mixed/dbeta = eta * (beta^2/GIIc + eps)^(eta-1) * (2*beta/GIIc)
-    const auto dGc_mixed_dbeta =
-        _eta * neml2::pow(pow_base_PL, _eta - 1.0) * (2.0 * beta / _GIIc);
+    const auto dGc_mixed_dbeta = _eta * neml2::pow(pow_base_PL, _eta - 1.0) * (2.0 * beta / _GIIc);
     // dGc_term/dbeta = (-1/eta) * Gc_mixed^(-1/eta - 1) * dGc_mixed/dbeta
     const auto dGc_term_dbeta =
         (-1.0 / _eta) * neml2::pow(Gc_mixed, -1.0 / _eta - 1.0) * dGc_mixed_dbeta;
@@ -257,16 +259,16 @@ BiLinearMixedModeTraction::set_value(bool out, bool dout_din, bool /*d2out_din2*
   // d_trial = delta_final * (delta_m - delta_init) / (delta_m * (delta_final - delta_init))
   // Partials (derivation in design/.../BiLinearMixedModeTraction_spec_simple.md):
   //   d/d(delta_m)     =  delta_final * delta_init / (delta_m^2 * (delta_final - delta_init))
-  //   d/d(delta_init)  =  delta_final * (delta_m - delta_final) / (delta_m * (delta_final - delta_init)^2)
-  //   d/d(delta_final) = -delta_init  * (delta_m - delta_init)  / (delta_m * (delta_final - delta_init)^2)
+  //   d/d(delta_init)  =  delta_final * (delta_m - delta_final) /
+  //                       (delta_m * (delta_final - delta_init)^2)
+  //   d/d(delta_final) = -delta_init * (delta_m - delta_init) /
+  //                       (delta_m * (delta_final - delta_init)^2)
   const auto inv_dm_sq = inv_dm * inv_dm;
   const auto inv_df_minus_di = 1.0 / safe_df_minus_di;
   const auto inv_df_minus_di_sq = inv_df_minus_di * inv_df_minus_di;
   const auto dd_trial_ddm = delta_final * delta_init * inv_dm_sq * inv_df_minus_di;
-  const auto dd_trial_ddinit =
-      delta_final * (delta_m - delta_final) * inv_dm * inv_df_minus_di_sq;
-  const auto dd_trial_ddfinal =
-      -delta_init * (delta_m - delta_init) * inv_dm * inv_df_minus_di_sq;
+  const auto dd_trial_ddinit = delta_final * (delta_m - delta_final) * inv_dm * inv_df_minus_di_sq;
+  const auto dd_trial_ddfinal = -delta_init * (delta_m - delta_init) * inv_dm * inv_df_minus_di_sq;
   const auto dd_trial_ddelta_linear = dd_trial_ddm * ddelta_m_ddelta +
                                       dd_trial_ddinit * ddelta_init_ddelta +
                                       dd_trial_ddfinal * ddelta_final_ddelta;
@@ -284,8 +286,8 @@ BiLinearMixedModeTraction::set_value(bool out, bool dout_din, bool /*d2out_din2*
   //               - K * outer(delta_active, dd/d(delta))
   const auto active_jac = R2::fill(H, one_s, one_s);
   const auto inactive_jac = R2::fill(one_minus_H, zero_s, zero_s);
-  _T.d(_delta) = _K * (1.0 - d) * active_jac + _K * inactive_jac -
-                 _K * neml2::outer(delta_active, dd_ddelta);
+  _T.d(_delta) =
+      _K * (1.0 - d) * active_jac + _K * inactive_jac - _K * neml2::outer(delta_active, dd_ddelta);
 
   // ---- d(T)/d(d_old) = -K * delta_active * d(d)/d(d_old) ----
   _T.d(_d_old) = -_K * delta_active * dd_dd_old;

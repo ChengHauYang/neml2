@@ -31,10 +31,6 @@
 [Models]
   [model]
     type = BiLinearMixedModeTraction
-    # Disable TorchScript tracing: the where()-conditions involve multiple grad-tracking
-    # intermediates (delta_m vs delta_init/delta_final) which the tracer rejects.
-    # The analytical Jacobian itself is exact; only the JIT graph caching is bypassed.
-    jit = false
     penalty_stiffness = 1.0e4
     mode_I_fracture_energy = 1.0
     mode_II_fracture_energy = 1.5
