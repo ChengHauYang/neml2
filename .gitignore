@@ -60,3 +60,9 @@ Testing
 *.pdf
 *.gv
 *.json
+
+# Agents
+.claude
+
+# repo
+design
