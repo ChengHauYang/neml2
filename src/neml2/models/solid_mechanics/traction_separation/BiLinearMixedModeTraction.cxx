@@ -48,23 +48,36 @@ BiLinearMixedModeTraction::expected_options()
       "propagation criterion. Damage is irreversible; normal compression is recovered through a "
       "Macaulay split.";
 
-  options.add_parameter<Scalar>("penalty_stiffness", "Penalty elastic stiffness K");
-  options.add_parameter<Scalar>("mode_I_fracture_energy", "Mode I critical energy release rate");
-  options.add_parameter<Scalar>("mode_II_fracture_energy", "Mode II critical energy release rate");
-  options.add_parameter<Scalar>("normal_strength", "Tensile (normal) strength N");
-  options.add_parameter<Scalar>("shear_strength", "Shear strength S");
-  options.add_parameter<Scalar>("power_law_exponent",
-                                "Mixed-mode criterion exponent (BK or power-law)");
+  options.set_parameter<TensorName<Scalar>>("penalty_stiffness");
+  options.set("penalty_stiffness").doc() = "Penalty elastic stiffness K";
+
+  options.set_parameter<TensorName<Scalar>>("mode_I_fracture_energy");
+  options.set("mode_I_fracture_energy").doc() = "Mode I critical energy release rate";
+
+  options.set_parameter<TensorName<Scalar>>("mode_II_fracture_energy");
+  options.set("mode_II_fracture_energy").doc() = "Mode II critical energy release rate";
+
+  options.set_parameter<TensorName<Scalar>>("normal_strength");
+  options.set("normal_strength").doc() = "Tensile (normal) strength N";
+
+  options.set_parameter<TensorName<Scalar>>("shear_strength");
+  options.set("shear_strength").doc() = "Shear strength S";
+
+  options.set_parameter<TensorName<Scalar>>("power_law_exponent");
+  options.set("power_law_exponent").doc() = "Mixed-mode criterion exponent (BK or power-law)";
 
   EnumSelection criterion({"BK", "POWER_LAW"}, "BK");
-  options.add<EnumSelection>(
-      "criterion", criterion, "Mixed-mode propagation criterion. Options are: " + criterion.join());
-  options.add<double>("epsilon",
-                      1e-16,
-                      "Small regularizer added inside sqrt() to keep its derivative bounded at "
-                      "zero displacement jump");
+  options.set<EnumSelection>("criterion") = criterion;
+  options.set("criterion").doc() =
+      "Mixed-mode propagation criterion. Options are: " + criterion.join();
 
-  options.add_output("damage", "Scalar damage variable (irreversible)");
+  options.set<double>("epsilon") = 1e-16;
+  options.set("epsilon").doc() =
+      "Small regularizer added inside sqrt() to keep its derivative bounded at "
+      "zero displacement jump";
+
+  options.set_output("damage");
+  options.set("damage").doc() = "Scalar damage variable (irreversible)";
 
   return options;
 }
@@ -72,7 +85,7 @@ BiLinearMixedModeTraction::expected_options()
 BiLinearMixedModeTraction::BiLinearMixedModeTraction(const OptionSet & options)
   : TractionSeparation(options),
     _d(declare_output_variable<Scalar>("damage")),
-    _d_old(declare_input_variable<Scalar>(history_name(_d.name(), /*nstep=*/1))),
+    _d_old(declare_input_variable<Scalar>(_d.name().old())),
     _K(declare_parameter<Scalar>("K", "penalty_stiffness")),
     _GIc(declare_parameter<Scalar>("GIc", "mode_I_fracture_energy")),
     _GIIc(declare_parameter<Scalar>("GIIc", "mode_II_fracture_energy")),

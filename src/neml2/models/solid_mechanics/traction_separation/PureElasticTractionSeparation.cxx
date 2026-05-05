@@ -38,12 +38,14 @@ PureElasticTractionSeparation::expected_options()
   options.doc() += " Linear elastic form with diagonal stiffness: \\f$ T_n = K_n \\delta_n \\f$ and "
                    "\\f$ T_{s_i} = K_t \\delta_{s_i} \\f$.";
 
-  options.set_private<bool>("define_second_derivatives", true);
+  options.set<bool>("define_second_derivatives") = true;
 
-  options.add_parameter<Scalar>("normal_stiffness",
-                                "Elastic stiffness in the normal direction (K_n)");
-  options.add_parameter<Scalar>("tangent_stiffness",
-                                "Elastic stiffness in both tangential directions (K_t)");
+  options.set_parameter<TensorName<Scalar>>("normal_stiffness");
+  options.set("normal_stiffness").doc() = "Elastic stiffness in the normal direction (K_n)";
+
+  options.set_parameter<TensorName<Scalar>>("tangent_stiffness");
+  options.set("tangent_stiffness").doc() =
+      "Elastic stiffness in both tangential directions (K_t)";
 
   return options;
 }

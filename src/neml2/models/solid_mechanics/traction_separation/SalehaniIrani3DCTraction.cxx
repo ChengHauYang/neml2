@@ -42,15 +42,20 @@ SalehaniIrani3DCTraction::expected_options()
       " Salehani-Irani exponential coupling: normal component is linear-times-exponential and "
       "shear components are linear-times-exponential with a quadratic exponent contribution.";
 
-  options.add_parameter<Scalar>(
-      "normal_gap_at_maximum_normal_traction",
-      "Normal displacement jump at which the normal traction is maximum");
-  options.add_parameter<Scalar>(
-      "tangential_gap_at_maximum_shear_traction",
+  options.set_parameter<TensorName<Scalar>>("normal_gap_at_maximum_normal_traction");
+  options.set("normal_gap_at_maximum_normal_traction").doc() =
+      "Normal displacement jump at which the normal traction is maximum";
+
+  options.set_parameter<TensorName<Scalar>>("tangential_gap_at_maximum_shear_traction");
+  options.set("tangential_gap_at_maximum_shear_traction").doc() =
       "Tangential displacement jump at which the shear traction is maximum (raw input; an "
-      "internal sqrt(2) scaling is applied)");
-  options.add_parameter<Scalar>("maximum_normal_traction", "Peak normal traction");
-  options.add_parameter<Scalar>("maximum_shear_traction", "Peak shear traction");
+      "internal sqrt(2) scaling is applied)";
+
+  options.set_parameter<TensorName<Scalar>>("maximum_normal_traction");
+  options.set("maximum_normal_traction").doc() = "Peak normal traction";
+
+  options.set_parameter<TensorName<Scalar>>("maximum_shear_traction");
+  options.set("maximum_shear_traction").doc() = "Peak shear traction";
 
   return options;
 }

@@ -6,7 +6,7 @@
     input_Vec_names = 'displacement_jump'
     input_Vec_values = 'jump'
 
-    input_Scalar_names = 'effective_displacement_jump_max~1'
+    input_Scalar_names = 'old_state/effective_displacement_jump_max'
     input_Scalar_values = '0.005'
 
     output_Vec_names = 'traction'

@@ -43,17 +43,24 @@ ExpTractionSeparation::expected_options()
       " Exponential cohesive form with irreversible scalar damage driven by the historic maximum "
       "effective displacement jump.";
 
-  options.add_parameter<Scalar>("fracture_energy", "Fracture energy G_c");
-  options.add_parameter<Scalar>("softening_length_scale", "Softening length scale delta_0");
-  options.add_parameter<Scalar>("tangential_weighting_factor",
-                                "Weighting factor beta on the squared tangential jump");
-  options.add<double>("epsilon",
-                      1e-16,
-                      "Small regularizer added inside the effective-jump sqrt to keep its "
-                      "derivative bounded at zero jump");
+  options.set_parameter<TensorName<Scalar>>("fracture_energy");
+  options.set("fracture_energy").doc() = "Fracture energy G_c";
 
-  options.add_output("effective_displacement_jump_max",
-                     "Historic maximum effective scalar displacement jump");
+  options.set_parameter<TensorName<Scalar>>("softening_length_scale");
+  options.set("softening_length_scale").doc() = "Softening length scale delta_0";
+
+  options.set_parameter<TensorName<Scalar>>("tangential_weighting_factor");
+  options.set("tangential_weighting_factor").doc() =
+      "Weighting factor beta on the squared tangential jump";
+
+  options.set<double>("epsilon") = 1e-16;
+  options.set("epsilon").doc() =
+      "Small regularizer added inside the effective-jump sqrt to keep its "
+      "derivative bounded at zero jump";
+
+  options.set_output("effective_displacement_jump_max");
+  options.set("effective_displacement_jump_max").doc() =
+      "Historic maximum effective scalar displacement jump";
 
   return options;
 }
@@ -61,8 +68,7 @@ ExpTractionSeparation::expected_options()
 ExpTractionSeparation::ExpTractionSeparation(const OptionSet & options)
   : TractionSeparation(options),
     _delta_eff_max(declare_output_variable<Scalar>("effective_displacement_jump_max")),
-    _delta_eff_max_old(
-        declare_input_variable<Scalar>(history_name(_delta_eff_max.name(), /*nstep=*/1))),
+    _delta_eff_max_old(declare_input_variable<Scalar>(_delta_eff_max.name().old())),
     _Gc(declare_parameter<Scalar>("Gc", "fracture_energy")),
     _delta0(declare_parameter<Scalar>("delta0", "softening_length_scale")),
     _beta(declare_parameter<Scalar>("beta", "tangential_weighting_factor")),
