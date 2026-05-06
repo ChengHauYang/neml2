@@ -3,10 +3,10 @@
     type = ModelUnitTest
     model = 'model'
 
-    input_Vec_names = 'displacement_jump'
+    input_Vec_names = 'forces/displacement_jump'
     input_Vec_values = 'jump'
 
-    output_Vec_names = 'traction'
+    output_Vec_names = 'state/traction'
     output_Vec_values = 'T'
 
     check_values = true

@@ -3,16 +3,16 @@
     type = ModelUnitTest
     model = 'model'
 
-    input_Vec_names = 'displacement_jump'
+    input_Vec_names = 'forces/displacement_jump'
     input_Vec_values = 'jump'
 
     input_Scalar_names = 'old_state/damage'
     input_Scalar_values = '0.0'
 
-    output_Vec_names = 'traction'
+    output_Vec_names = 'state/traction'
     output_Vec_values = 'T'
 
-    output_Scalar_names = 'damage'
+    output_Scalar_names = 'state/damage'
     output_Scalar_values = '0.5926889810380374'
 
     # FD on the bilinear damage law has a stiff slope (~140 per unit jump in some

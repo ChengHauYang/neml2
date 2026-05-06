@@ -3,16 +3,16 @@
     type = ModelUnitTest
     model = 'model'
 
-    input_Vec_names = 'displacement_jump'
+    input_Vec_names = 'forces/displacement_jump'
     input_Vec_values = 'jump'
 
     input_Scalar_names = 'old_state/effective_displacement_jump_max'
     input_Scalar_values = '0.005'
 
-    output_Vec_names = 'traction'
+    output_Vec_names = 'state/traction'
     output_Vec_values = 'T'
 
-    output_Scalar_names = 'effective_displacement_jump_max'
+    output_Scalar_names = 'state/effective_displacement_jump_max'
     output_Scalar_values = '0.022912878474781382'
 
     # FD truncation error on the sqrt-based effective jump is non-trivial; relax to match

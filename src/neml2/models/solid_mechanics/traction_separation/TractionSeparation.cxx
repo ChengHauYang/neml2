@@ -34,10 +34,10 @@ TractionSeparation::expected_options()
   options.doc() = "Map a displacement jump in the local interface frame to a traction in the same "
                   "frame. Components are ordered (normal, shear-1, shear-2).";
 
-  options.set_input("displacement_jump");
+  options.set_input("displacement_jump") = VariableName(FORCES, "displacement_jump");
   options.set("displacement_jump").doc() = "Displacement jump in the local interface frame";
 
-  options.set_output("traction");
+  options.set_output("traction") = VariableName(STATE, "traction");
   options.set("traction").doc() = "Traction in the local interface frame";
 
   return options;

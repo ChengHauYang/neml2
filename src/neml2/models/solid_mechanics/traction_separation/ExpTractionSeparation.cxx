@@ -58,7 +58,8 @@ ExpTractionSeparation::expected_options()
       "Small regularizer added inside the effective-jump sqrt to keep its "
       "derivative bounded at zero jump";
 
-  options.set_output("effective_displacement_jump_max");
+  options.set_output("effective_displacement_jump_max") =
+      VariableName(STATE, "effective_displacement_jump_max");
   options.set("effective_displacement_jump_max").doc() =
       "Historic maximum effective scalar displacement jump";
 

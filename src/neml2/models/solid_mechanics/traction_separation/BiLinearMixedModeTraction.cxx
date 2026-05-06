@@ -76,7 +76,7 @@ BiLinearMixedModeTraction::expected_options()
       "Small regularizer added inside sqrt() to keep its derivative bounded at "
       "zero displacement jump";
 
-  options.set_output("damage");
+  options.set_output("damage") = VariableName(STATE, "damage");
   options.set("damage").doc() = "Scalar damage variable (irreversible)";
 
   return options;
