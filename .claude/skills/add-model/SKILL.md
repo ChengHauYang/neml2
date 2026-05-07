@@ -271,7 +271,9 @@ If you don't have known reference values yet, leave `<expected_output_tensor>` f
 
 ## Step 3: Hand off to the user
 
-Print a short next-steps message to the user:
+Print a short next-steps message. **List every file that was scaffolded this turn — never collapse a multi-file scaffold to a single representative example.** If the turn produced N classes, the "Scaffolded" block lists 3·N paths and the "Run the new tests" command emits N `-c` flags, one per line, line-continued.
+
+Single-file template:
 
 ```
 Scaffolded:
@@ -282,7 +284,7 @@ Scaffolded:
 Build:
   cmake --build --preset dev
 
-Run only this test:
+Run the new test:
   ./build/dev/tests/unit/unit_tests models -c <Domain>/<Name>.i
 
 CMake auto-discovers the new files via file(GLOB_RECURSE) — no CMakeLists.txt edits are needed.
@@ -293,6 +295,39 @@ Before committing:
   3. Keep check_first_derivatives = true once derivatives are correct (NEML2 cross-checks them against finite differencing).
   4. clang-format will rewrite the files on pre-commit; that's expected.
 ```
+
+Multi-file template (N ≥ 2 classes scaffolded this turn — list every file, not just one):
+
+```
+Scaffolded:
+  include/neml2/models/<Domain>/<Name1>.h
+  src/neml2/models/<Domain>/<Name1>.cxx
+  tests/unit/models/<Domain>/<Name1>.i
+  include/neml2/models/<Domain>/<Name2>.h
+  src/neml2/models/<Domain>/<Name2>.cxx
+  tests/unit/models/<Domain>/<Name2>.i
+  ... (one block per class)
+
+Build:
+  cmake --build --preset dev
+
+Run the new tests:
+  ./build/dev/tests/unit/unit_tests \
+      "models" \
+      -c "<Domain>/<Name1>.i" \
+      -c "<Domain>/<Name2>.i" \
+      ... (one -c per scaffolded .i)
+
+CMake auto-discovers the new files via file(GLOB_RECURSE) — no CMakeLists.txt edits are needed.
+
+Before committing:
+  1. Fill in the set_value forward op and derivatives in each .cxx.
+  2. Replace the placeholder tensor values in each .i with actual reference data.
+  3. Keep check_first_derivatives = true once derivatives are correct (NEML2 cross-checks them against finite differencing).
+  4. clang-format will rewrite the files on pre-commit; that's expected.
+```
+
+If a scaffolded class produced more than one `.i` (e.g. `<Name>_elastic.i` + `<Name>_damage.i`), still list every `.i` separately under both "Scaffolded" and the `-c` block. The point is that the user can copy-paste one command and exercise everything that was just created.
 
 ## Easy mistakes to verify against
 
