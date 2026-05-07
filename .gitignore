@@ -64,3 +64,4 @@ Testing
 # Agents
 .claude/settings.local.json
 !.claude/settings.json
+design/
