@@ -2,11 +2,11 @@
 <html lang="en" data-accent-color="iris" data-content_root="../../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Batching and broadcasting - NEML2 3.0.6</title><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Region views" href="region_views.html" /><link rel="prev" title="Tensor shape regions" href="regions.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Batching and broadcasting - NEML2 3.1.0</title><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Region views" href="region_views.html" /><link rel="prev" title="Tensor shape regions" href="regions.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=9454f7d5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=2ceb65ce" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
@@ -92,6 +92,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/optimization/pyzag.html">Recurrent calibration with pyzag</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/optimization/deterministic/main.html">Deterministic material model calibration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/optimization/statistical/main.html">Statistical material model learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/optimization/crystal_plasticity_calibration/main.html">Calibrating a crystal-plasticity model with pyzag</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Tensor types</a><ul class="current">
@@ -140,6 +141,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../deployment/python.html">Python integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/cpp.html">C++ integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/cli.html">CLI utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/verbosity.html">Controlling verbosity</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">Contributing &amp; development</span></p>
 <ul>
@@ -160,7 +162,10 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../references/cpp_aoti.html"><code class="docutils literal notranslate"><span class="pre">cpp-aoti</span></code> — compiled model from C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references/cpp_dispatch.html"><code class="docutils literal notranslate"><span class="pre">cpp-dispatch</span></code> — dispatching across devices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references/cpp_eager.html"><code class="docutils literal notranslate"><span class="pre">cpp-eager</span></code> — eager evaluation from C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references/solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references/sub_batch.html">Sub-batch axes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references/aoti_packages.html">AOTI packages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references/accelerators.html">Accelerators (device families)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references/pipeline.html">Compilation pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated/syntax/index.html">Syntax catalog</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../generated/syntax/Models/index.html">Models</a><ul>
@@ -176,6 +181,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/ArrheniusParameter.html">ArrheniusParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/ComposedModel.html">ComposedModel</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/ConstantExtrapolationPredictor.html">ConstantExtrapolationPredictor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/CoordinateDescentPredictor.html">CoordinateDescentPredictor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/CopyMRP.html">CopyMRP</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/CopyMillerIndex.html">CopyMillerIndex</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/CopyR2.html">CopyR2</a></li>
@@ -196,16 +202,19 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/MillerIndexConstantParameter.html">MillerIndexConstantParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/MillerIndexInputParameter.html">MillerIndexInputParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/MillerIndexParameterToVariable.html">MillerIndexParameterToVariable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/MinMapComplementarity.html">MinMapComplementarity</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/MixedControlSetup.html">MixedControlSetup</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2BackwardEulerTimeIntegration.html">R2BackwardEulerTimeIntegration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2ConstantParameter.html">R2ConstantParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2Determinant.html">R2Determinant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2ForwardEulerTimeIntegration.html">R2ForwardEulerTimeIntegration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2InputParameter.html">R2InputParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2Multiplication.html">R2Multiplication</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2ParameterToVariable.html">R2ParameterToVariable</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2ToSR2.html">R2ToSR2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2ToWR2.html">R2ToWR2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2VariableRate.html">R2VariableRate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/RateCondensation.html">RateCondensation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/RotationMatrix.html">RotationMatrix</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/SR2BackwardEulerTimeIntegration.html">SR2BackwardEulerTimeIntegration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/SR2BilinearInterpolation.html">SR2BilinearInterpolation</a></li>
@@ -318,9 +327,15 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../generated/syntax/Solvers/index.html">Solvers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/BiCGStab.html">BiCGStab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/BlockJacobiPreconditioner.html">BlockJacobiPreconditioner</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/DenseLU.html">DenseLU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/FullPreconditioner.html">FullPreconditioner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/GMRES.html">GMRES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/JacobiPreconditioner.html">JacobiPreconditioner</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/Newton.html">Newton</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/NewtonWithLineSearch.html">NewtonWithLineSearch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/NoPreconditioner.html">NoPreconditioner</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/SchurComplement.html">SchurComplement</a></li>
 </ul>
 </li>
@@ -412,7 +427,7 @@ data-aria-dark="Switch to auto color mode">
       <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
   <article class="yue" role="main">
           <section class="tex2jax_ignore mathjax_ignore" id="batching-and-broadcasting">
-<span id="tensor-types-batching"></span><h1>Batching and broadcasting<a class="headerlink" href="#batching-and-broadcasting" title="Link to this heading">¶</a></h1>
+<span id="tensor-types-batching"></span><h1>Batching and broadcasting<a class="headerlink" href="#batching-and-broadcasting" title="Link to this heading">#</a></h1>
 <p>Vectorizing a model over many material points is the whole point of the
 tensor backend: the <em>same</em> <code class="docutils literal notranslate"><span class="pre">forward</span></code> body evaluates one state or a
 million, and the only difference is the shape of the input. This page
@@ -420,7 +435,7 @@ shows the batching pattern, the broadcasting rules wrappers follow, and
 the one batching concept torch has no equivalent for — the sub-batch
 region.</p>
 <section id="one-body-any-batch-shape">
-<h2>One body, any batch shape<a class="headerlink" href="#one-body-any-batch-shape" title="Link to this heading">¶</a></h2>
+<h2>One body, any batch shape<a class="headerlink" href="#one-body-any-batch-shape" title="Link to this heading">#</a></h2>
 <p>A model’s <code class="docutils literal notranslate"><span class="pre">forward</span></code> dispatches one PyTorch kernel per operation, and
 those kernels broadcast across leading axes natively. So we can hand the
 same model a single strain, a 1-D batch, or a 2-D grid and only the
@@ -431,8 +446,8 @@ leading axes change. First, a small elasticity model to evaluate:</p>
 </span><span data-line="2"><span class="p">[</span><span class="n">Models</span><span class="p">]</span>
 </span><span data-line="3">  <span class="p">[</span><span class="n">elasticity</span><span class="p">]</span>
 </span><span data-line="4">    <span class="nb">type</span> <span class="o">=</span> <span class="n">LinearIsotropicElasticity</span>
-</span><span data-line="5">    <span class="n">coefficients</span>      <span class="o">=</span> <span class="s1">&#39;200e3          0.3&#39;</span>
-</span><span data-line="6">    <span class="n">coefficient_types</span> <span class="o">=</span> <span class="s1">&#39;YOUNGS_MODULUS POISSONS_RATIO&#39;</span>
+</span><span data-line="5">    <span class="n">coefficients</span>      <span class="o">=</span> <span class="s1">'200e3          0.3'</span>
+</span><span data-line="6">    <span class="n">coefficient_types</span> <span class="o">=</span> <span class="s1">'YOUNGS_MODULUS POISSONS_RATIO'</span>
 </span><span data-line="7">  <span class="p">[]</span>
 </span><span data-line="8"><span class="p">[]</span>
 </span></pre></div>
@@ -450,15 +465,15 @@ leading axes change. First, a small elasticity model to evaluate:</p>
 </span><span data-line="2"><span class="kn">import</span><span class="w"> </span><span class="nn">neml2</span>
 </span><span data-line="3"><span class="kn">from</span><span class="w"> </span><span class="nn">neml2.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">SR2</span>
 </span><span data-line="4">
-</span><span data-line="5"><span class="n">model</span> <span class="o">=</span> <span class="n">neml2</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;elasticity.i&quot;</span><span class="p">,</span> <span class="s2">&quot;elasticity&quot;</span><span class="p">)</span>
+</span><span data-line="5"><span class="n">model</span> <span class="o">=</span> <span class="n">neml2</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"elasticity.i"</span><span class="p">,</span> <span class="s2">"elasticity"</span><span class="p">)</span>
 </span><span data-line="6">
 </span><span data-line="7"><span class="n">single</span> <span class="o">=</span> <span class="n">SR2</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># base only, no batch axes</span>
 </span><span data-line="8"><span class="n">batch</span> <span class="o">=</span> <span class="n">SR2</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">10_000</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.01</span><span class="p">)</span>  <span class="c1"># one leading batch dim</span>
 </span><span data-line="9"><span class="n">grid</span> <span class="o">=</span> <span class="n">SR2</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.01</span><span class="p">)</span>  <span class="c1"># two leading batch dims</span>
 </span><span data-line="10">
-</span><span data-line="11"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;single -&gt;&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">single</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-</span><span data-line="12"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;batch  -&gt;&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-</span><span data-line="13"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;grid   -&gt;&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+</span><span data-line="11"><span class="nb">print</span><span class="p">(</span><span class="s2">"single -&gt;"</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">single</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+</span><span data-line="12"><span class="nb">print</span><span class="p">(</span><span class="s2">"batch  -&gt;"</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+</span><span data-line="13"><span class="nb">print</span><span class="p">(</span><span class="s2">"grid   -&gt;"</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
 </span></pre></div>
 </div>
 </div>
@@ -476,7 +491,7 @@ whole batch as one tensor whenever you can.
 <a class="reference internal" href="../tutorials/models/vectorization/main.html#tutorials-models-vectorization"><span class="std std-ref">Vectorization</span></a> shows the timing difference.</p>
 </section>
 <section id="broadcasting">
-<h2>Broadcasting<a class="headerlink" href="#broadcasting" title="Link to this heading">¶</a></h2>
+<h2>Broadcasting<a class="headerlink" href="#broadcasting" title="Link to this heading">#</a></h2>
 <p>Binary operators between wrappers broadcast their batch regions using
 PyTorch’s standard rules: right-aligned by axis, size-1 axes stretched
 to match, mismatched non-1 sizes an error. A <code class="docutils literal notranslate"><span class="pre">Scalar</span></code> broadcasts against
@@ -489,10 +504,10 @@ one:</p>
 </span><span data-line="3"><span class="n">pressure</span> <span class="o">=</span> <span class="n">Scalar</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>  <span class="c1"># shape (5,)</span>
 </span><span data-line="4"><span class="n">unit</span> <span class="o">=</span> <span class="n">SR2</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># base only, shape (6,)</span>
 </span><span data-line="5"><span class="n">scaled</span> <span class="o">=</span> <span class="n">pressure</span> <span class="o">*</span> <span class="n">unit</span>  <span class="c1"># (5,) Scalar × (6,) SR2</span>
-</span><span data-line="6"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scalar(5) * SR2(base) -&gt;&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">scaled</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+</span><span data-line="6"><span class="nb">print</span><span class="p">(</span><span class="s2">"Scalar(5) * SR2(base) -&gt;"</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">scaled</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
 </span><span data-line="7">
 </span><span data-line="8"><span class="n">offset</span> <span class="o">=</span> <span class="n">SR2</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span> <span class="o">+</span> <span class="n">unit</span>  <span class="c1"># (5, 6) + (6,)</span>
-</span><span data-line="9"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;SR2(5) + SR2(base)    -&gt;&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+</span><span data-line="9"><span class="nb">print</span><span class="p">(</span><span class="s2">"SR2(5) + SR2(base)    -&gt;"</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
 </span></pre></div>
 </div>
 </div>
@@ -505,7 +520,7 @@ one:</p>
 </div>
 </section>
 <section id="sub-batch-metadata-survives-the-op">
-<h2>Sub-batch metadata survives the op<a class="headerlink" href="#sub-batch-metadata-survives-the-op" title="Link to this heading">¶</a></h2>
+<h2>Sub-batch metadata survives the op<a class="headerlink" href="#sub-batch-metadata-survives-the-op" title="Link to this heading">#</a></h2>
 <p>Algebraic operators don’t just broadcast the raw tensors — they unify
 the operands’ sub-batch widths and tag the result accordingly. So a
 “global” parameter and a “per-site” field combine cleanly at any dynamic
@@ -515,8 +530,8 @@ batch size, and the result still knows which axis is per-site:</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">glob</span> <span class="o">=</span> <span class="n">Scalar</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>  <span class="c1"># a global scalar, no sub-batch</span>
 </span><span data-line="2"><span class="n">per_site</span> <span class="o">=</span> <span class="n">Scalar</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">20</span><span class="p">))</span><span class="o">.</span><span class="n">sub_batch</span><span class="o">.</span><span class="n">retag</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># length-20 sub-batch</span>
 </span><span data-line="3"><span class="n">combined</span> <span class="o">=</span> <span class="n">glob</span> <span class="o">*</span> <span class="n">per_site</span>
-</span><span data-line="4"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;sub_batch_shape -&gt;&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">combined</span><span class="o">.</span><span class="n">sub_batch_shape</span><span class="p">))</span>
-</span><span data-line="5"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;sub_batch_ndim  -&gt;&quot;</span><span class="p">,</span> <span class="n">combined</span><span class="o">.</span><span class="n">sub_batch_ndim</span><span class="p">)</span>
+</span><span data-line="4"><span class="nb">print</span><span class="p">(</span><span class="s2">"sub_batch_shape -&gt;"</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">combined</span><span class="o">.</span><span class="n">sub_batch_shape</span><span class="p">))</span>
+</span><span data-line="5"><span class="nb">print</span><span class="p">(</span><span class="s2">"sub_batch_ndim  -&gt;"</span><span class="p">,</span> <span class="n">combined</span><span class="o">.</span><span class="n">sub_batch_ndim</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </div>
@@ -529,7 +544,7 @@ batch size, and the result still knows which axis is per-site:</p>
 </div>
 </section>
 <section id="declaring-sub-batch-axes-in-an-input-file">
-<h2>Declaring sub-batch axes in an input file<a class="headerlink" href="#declaring-sub-batch-axes-in-an-input-file" title="Link to this heading">¶</a></h2>
+<h2>Declaring sub-batch axes in an input file<a class="headerlink" href="#declaring-sub-batch-axes-in-an-input-file" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">.sub_batch.retag(n)</span></code> is also valid inside a <code class="docutils literal notranslate"><span class="pre">[Tensors]</span></code> HIT block,
 whose <code class="docutils literal notranslate"><span class="pre">expr</span></code> is evaluated as Python. A lookup-table control axis is the
 canonical case — here 20 interpolation points marked as the sub-batch:</p>
@@ -539,7 +554,7 @@ canonical case — here 20 interpolation points marked as the sub-batch:</p>
 </span><span data-line="2"><span class="p">[</span><span class="n">Tensors</span><span class="p">]</span>
 </span><span data-line="3">  <span class="p">[</span><span class="n">T_controls</span><span class="p">]</span>
 </span><span data-line="4">    <span class="nb">type</span> <span class="o">=</span> <span class="n">Python</span>
-</span><span data-line="5">    <span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;linspace(Scalar(300.0).sub_batch, Scalar(1200.0).sub_batch, 20)&#39;</span>
+</span><span data-line="5">    <span class="n">expr</span> <span class="o">=</span> <span class="s1">'linspace(Scalar(300.0).sub_batch, Scalar(1200.0).sub_batch, 20)'</span>
 </span><span data-line="6">  <span class="p">[]</span>
 </span><span data-line="7"><span class="p">[]</span>
 </span></pre></div>
@@ -553,9 +568,9 @@ canonical case — here 20 interpolation points marked as the sub-batch:</p>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">controls</span> <span class="o">=</span> <span class="n">neml2</span><span class="o">.</span><span class="n">load_input</span><span class="p">(</span><span class="s2">&quot;controls.i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get_tensor</span><span class="p">(</span><span class="s2">&quot;T_controls&quot;</span><span class="p">)</span>
-</span><span data-line="2"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;sub_batch_shape -&gt;&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">controls</span><span class="o">.</span><span class="n">sub_batch_shape</span><span class="p">))</span>
-</span><span data-line="3"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;sub_batch_ndim  -&gt;&quot;</span><span class="p">,</span> <span class="n">controls</span><span class="o">.</span><span class="n">sub_batch_ndim</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">controls</span> <span class="o">=</span> <span class="n">neml2</span><span class="o">.</span><span class="n">load_input</span><span class="p">(</span><span class="s2">"controls.i"</span><span class="p">)</span><span class="o">.</span><span class="n">get_tensor</span><span class="p">(</span><span class="s2">"T_controls"</span><span class="p">)</span>
+</span><span data-line="2"><span class="nb">print</span><span class="p">(</span><span class="s2">"sub_batch_shape -&gt;"</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">controls</span><span class="o">.</span><span class="n">sub_batch_shape</span><span class="p">))</span>
+</span><span data-line="3"><span class="nb">print</span><span class="p">(</span><span class="s2">"sub_batch_ndim  -&gt;"</span><span class="p">,</span> <span class="n">controls</span><span class="o">.</span><span class="n">sub_batch_ndim</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </div>
@@ -568,7 +583,7 @@ canonical case — here 20 interpolation points marked as the sub-batch:</p>
 </div>
 </section>
 <section id="relation-to-torch">
-<h2>Relation to torch<a class="headerlink" href="#relation-to-torch" title="Link to this heading">¶</a></h2>
+<h2>Relation to torch<a class="headerlink" href="#relation-to-torch" title="Link to this heading">#</a></h2>
 <p>The leading-batch broadcasting above <em>is</em> PyTorch’s — wrappers add no
 new rule there; they just keep the base packing intact through it. The
 sub-batch region is the genuinely new concept: a torch tensor has no
@@ -577,7 +592,7 @@ which is exactly the distinction the chain rule needs when models on
 different sites compose.</p>
 </section>
 <section id="see-also">
-<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="../tutorials/models/vectorization/main.html#tutorials-models-vectorization"><span class="std std-ref">Vectorization</span></a> — a timed loop-vs-batched
 comparison.</p></li>
@@ -624,13 +639,13 @@ comparison.</p></li>
   </p>
 </div>
       <div class="sy-foot-socials">
-<a href="https://github.com/applied-material-modeling/neml2" aria-label="GitHub">
-  <iconify-icon icon="simple-icons:github"></iconify-icon>
-</a></div>
+  <a href="https://github.com/applied-material-modeling/neml2" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=c3365b21"></script>
+      <script src="../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

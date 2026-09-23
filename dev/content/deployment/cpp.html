@@ -2,11 +2,11 @@
 <html lang="en" data-accent-color="iris" data-content_root="../../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>C++ integration - NEML2 3.0.6</title><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="CLI utilities" href="cli.html" /><link rel="prev" title="Python integration" href="python.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>C++ integration - NEML2 3.1.0</title><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="CLI utilities" href="cli.html" /><link rel="prev" title="Python integration" href="python.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=9454f7d5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=2ceb65ce" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
@@ -92,6 +92,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/optimization/pyzag.html">Recurrent calibration with pyzag</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/optimization/deterministic/main.html">Deterministic material model calibration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/optimization/statistical/main.html">Statistical material model learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/optimization/crystal_plasticity_calibration/main.html">Calibrating a crystal-plasticity model with pyzag</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../tensor_types/index.html">Tensor types</a><ul>
@@ -140,6 +141,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="python.html">Python integration</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">C++ integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli.html">CLI utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="verbosity.html">Controlling verbosity</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">Contributing &amp; development</span></p>
 <ul>
@@ -160,7 +162,10 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../references/cpp_aoti.html"><code class="docutils literal notranslate"><span class="pre">cpp-aoti</span></code> — compiled model from C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references/cpp_dispatch.html"><code class="docutils literal notranslate"><span class="pre">cpp-dispatch</span></code> — dispatching across devices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references/cpp_eager.html"><code class="docutils literal notranslate"><span class="pre">cpp-eager</span></code> — eager evaluation from C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references/solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references/sub_batch.html">Sub-batch axes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references/aoti_packages.html">AOTI packages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references/accelerators.html">Accelerators (device families)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references/pipeline.html">Compilation pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated/syntax/index.html">Syntax catalog</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../generated/syntax/Models/index.html">Models</a><ul>
@@ -176,6 +181,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/ArrheniusParameter.html">ArrheniusParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/ComposedModel.html">ComposedModel</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/ConstantExtrapolationPredictor.html">ConstantExtrapolationPredictor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/CoordinateDescentPredictor.html">CoordinateDescentPredictor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/CopyMRP.html">CopyMRP</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/CopyMillerIndex.html">CopyMillerIndex</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/CopyR2.html">CopyR2</a></li>
@@ -196,16 +202,19 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/MillerIndexConstantParameter.html">MillerIndexConstantParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/MillerIndexInputParameter.html">MillerIndexInputParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/MillerIndexParameterToVariable.html">MillerIndexParameterToVariable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/MinMapComplementarity.html">MinMapComplementarity</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/MixedControlSetup.html">MixedControlSetup</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2BackwardEulerTimeIntegration.html">R2BackwardEulerTimeIntegration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2ConstantParameter.html">R2ConstantParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2Determinant.html">R2Determinant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2ForwardEulerTimeIntegration.html">R2ForwardEulerTimeIntegration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2InputParameter.html">R2InputParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2Multiplication.html">R2Multiplication</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2ParameterToVariable.html">R2ParameterToVariable</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2ToSR2.html">R2ToSR2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2ToWR2.html">R2ToWR2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/R2VariableRate.html">R2VariableRate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/RateCondensation.html">RateCondensation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/RotationMatrix.html">RotationMatrix</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/SR2BackwardEulerTimeIntegration.html">SR2BackwardEulerTimeIntegration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../generated/syntax/Models/common/SR2BilinearInterpolation.html">SR2BilinearInterpolation</a></li>
@@ -318,9 +327,15 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../generated/syntax/Solvers/index.html">Solvers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/BiCGStab.html">BiCGStab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/BlockJacobiPreconditioner.html">BlockJacobiPreconditioner</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/DenseLU.html">DenseLU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/FullPreconditioner.html">FullPreconditioner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/GMRES.html">GMRES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/JacobiPreconditioner.html">JacobiPreconditioner</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/Newton.html">Newton</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/NewtonWithLineSearch.html">NewtonWithLineSearch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/NoPreconditioner.html">NoPreconditioner</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../generated/syntax/Solvers/SchurComplement.html">SchurComplement</a></li>
 </ul>
 </li>
@@ -407,7 +422,7 @@ data-aria-dark="Switch to auto color mode">
       <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
   <article class="yue" role="main">
           <section class="tex2jax_ignore mathjax_ignore" id="c-integration">
-<span id="external-project-integration"></span><h1>C++ integration<a class="headerlink" href="#c-integration" title="Link to this heading">¶</a></h1>
+<span id="external-project-integration"></span><h1>C++ integration<a class="headerlink" href="#c-integration" title="Link to this heading">#</a></h1>
 <p>The PyPI wheel bundles every artifact a downstream C++ project needs —
 shared libraries, public headers, CMake config exports, and pkg-config
 files. Pointing your build system at the wheel’s install tree is enough;
@@ -428,12 +443,12 @@ relevant subdirectories are all under</p>
 <p class="admonition-title">Important</p>
 <p>Every shell snippet on this page assumes a <code class="docutils literal notranslate"><span class="pre">$NEML2_ROOT</span></code> variable
 pointing at the wheel root. Set it once per shell:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nv">NEML2_ROOT</span><span class="o">=</span><span class="k">$(</span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import neml2, os; print(os.path.dirname(neml2.__file__))&quot;</span><span class="k">)</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nv">NEML2_ROOT</span><span class="o">=</span><span class="k">$(</span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import neml2, os; print(os.path.dirname(neml2.__file__))"</span><span class="k">)</span>
 </span></pre></div>
 </div>
 </div>
 <section id="cmake">
-<h2>CMake<a class="headerlink" href="#cmake" title="Link to this heading">¶</a></h2>
+<h2>CMake<a class="headerlink" href="#cmake" title="Link to this heading">#</a></h2>
 <p>NEML2 ships a CMake config package. After installing the wheel, point
 CMake at the wheel root via <code class="docutils literal notranslate"><span class="pre">CMAKE_PREFIX_PATH</span></code> (or directly at the
 config dir via <code class="docutils literal notranslate"><span class="pre">neml2_DIR</span></code>) and use <code class="docutils literal notranslate"><span class="pre">find_package</span></code>. Two targets are
@@ -458,7 +473,7 @@ depends on <code class="docutils literal notranslate"><span class="pre">neml2::a
 </span></pre></div>
 </div>
 <p>Build it with either of:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nv">NEML2_ROOT</span><span class="o">=</span><span class="k">$(</span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import neml2, os; print(os.path.dirname(neml2.__file__))&quot;</span><span class="k">)</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nv">NEML2_ROOT</span><span class="o">=</span><span class="k">$(</span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import neml2, os; print(os.path.dirname(neml2.__file__))"</span><span class="k">)</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="c1"># Point at the wheel root — cmake searches the standard share/cmake/&lt;pkg&gt;/ subtree.</span>
 </span><span data-line="4">cmake<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DCMAKE_PREFIX_PATH<span class="o">=</span><span class="nv">$NEML2_ROOT</span><span class="w"> </span>-S<span class="w"> </span>.
@@ -474,10 +489,10 @@ depends on <code class="docutils literal notranslate"><span class="pre">neml2::a
 transitively via the exported config.</p>
 </section>
 <section id="pkg-config">
-<h2>pkg-config<a class="headerlink" href="#pkg-config" title="Link to this heading">¶</a></h2>
+<h2>pkg-config<a class="headerlink" href="#pkg-config" title="Link to this heading">#</a></h2>
 <p>The same install also ships pkg-config files for build systems that
 don’t speak CMake (plain Makefiles, Meson, Autotools, …).</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nv">NEML2_ROOT</span><span class="o">=</span><span class="k">$(</span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import neml2, os; print(os.path.dirname(neml2.__file__))&quot;</span><span class="k">)</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nv">NEML2_ROOT</span><span class="o">=</span><span class="k">$(</span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import neml2, os; print(os.path.dirname(neml2.__file__))"</span><span class="k">)</span>
 </span><span data-line="2"><span class="nb">export</span><span class="w"> </span><span class="nv">PKG_CONFIG_PATH</span><span class="o">=</span><span class="nv">$NEML2_ROOT</span>/share/pkgconfig:<span class="nv">$PKG_CONFIG_PATH</span>
 </span><span data-line="3">pkg-config<span class="w"> </span>--cflags<span class="w"> </span>--libs<span class="w"> </span>neml2
 </span></pre></div>
@@ -523,24 +538,24 @@ fragments that <code class="docutils literal notranslate"><span class="pre">neml
 </ul>
 </section>
 <section id="header-includes">
-<h2>Header includes<a class="headerlink" href="#header-includes" title="Link to this heading">¶</a></h2>
+<h2>Header includes<a class="headerlink" href="#header-includes" title="Link to this heading">#</a></h2>
 <p>C++ source includes are namespaced under <code class="docutils literal notranslate"><span class="pre">neml2/csrc/</span></code>. Public shipped
 headers for the compiled path:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;neml2/csrc/aoti/Model.h&quot;</span><span class="c1">      // neml2::aoti::Model, SolverConfig, VariablePairJacobian</span>
-</span><span data-line="2"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;neml2/csrc/aoti/Exception.h&quot;</span><span class="c1">  // neml2::aoti::Exception, FatalError, ConvergenceError, AggregateError</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="cp">#include</span><span class="w"> </span><span class="cpf">"neml2/csrc/aoti/Model.h"</span><span class="w">      </span><span class="c1">// neml2::aoti::Model, SolverConfig, VariablePairJacobian</span>
+</span><span data-line="2"><span class="cp">#include</span><span class="w"> </span><span class="cpf">"neml2/csrc/aoti/Exception.h"</span><span class="w">  </span><span class="c1">// neml2::aoti::Exception, FatalError, ConvergenceError, AggregateError</span>
 </span></pre></div>
 </div>
 <p>For the dispatcher (multi-device / scheduled evaluation):</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;neml2/csrc/dispatchers/factory.h&quot;</span><span class="c1">           // neml2::aoti::load_model (dispatched overload)</span>
-</span><span data-line="2"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;neml2/csrc/dispatchers/DispatchedModel.h&quot;</span><span class="c1">   // neml2::aoti::DispatchedModel</span>
-</span><span data-line="3"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;neml2/csrc/dispatchers/SimpleScheduler.h&quot;</span><span class="c1">   // neml2::aoti::SimpleScheduler</span>
-</span><span data-line="4"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;neml2/csrc/dispatchers/StaticHybridScheduler.h&quot;</span><span class="c1">  // neml2::aoti::StaticHybridScheduler</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="cp">#include</span><span class="w"> </span><span class="cpf">"neml2/csrc/dispatchers/factory.h"</span><span class="w">           </span><span class="c1">// neml2::aoti::load_model (dispatched overload)</span>
+</span><span data-line="2"><span class="cp">#include</span><span class="w"> </span><span class="cpf">"neml2/csrc/dispatchers/DispatchedModel.h"</span><span class="w">   </span><span class="c1">// neml2::aoti::DispatchedModel</span>
+</span><span data-line="3"><span class="cp">#include</span><span class="w"> </span><span class="cpf">"neml2/csrc/dispatchers/SimpleScheduler.h"</span><span class="w">   </span><span class="c1">// neml2::aoti::SimpleScheduler</span>
+</span><span data-line="4"><span class="cp">#include</span><span class="w"> </span><span class="cpf">"neml2/csrc/dispatchers/StaticHybridScheduler.h"</span><span class="w">  </span><span class="c1">// neml2::aoti::StaticHybridScheduler</span>
 </span></pre></div>
 </div>
 <p>For the eager (uncompiled) path — only available when linking
 <code class="docutils literal notranslate"><span class="pre">neml2::eager</span></code>:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;neml2/csrc/eager/Model.h&quot;</span><span class="c1">      // neml2::eager::Model</span>
-</span><span data-line="2"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;neml2/csrc/eager/load_model.h&quot;</span><span class="c1"> // neml2::eager::load_model</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="cp">#include</span><span class="w"> </span><span class="cpf">"neml2/csrc/eager/Model.h"</span><span class="w">      </span><span class="c1">// neml2::eager::Model</span>
+</span><span data-line="2"><span class="cp">#include</span><span class="w"> </span><span class="cpf">"neml2/csrc/eager/load_model.h"</span><span class="w"> </span><span class="c1">// neml2::eager::load_model</span>
 </span></pre></div>
 </div>
 <p>These paths mirror the layout under <code class="docutils literal notranslate"><span class="pre">&lt;site-packages&gt;/neml2/include/</span></code>,
@@ -548,7 +563,7 @@ so the same source compiles whether NEML2 was discovered via CMake’s
 <code class="docutils literal notranslate"><span class="pre">find_package</span></code> or via <code class="docutils literal notranslate"><span class="pre">pkg-config</span> <span class="pre">--cflags</span></code>.</p>
 </section>
 <section id="runtime-library-lookup">
-<h2>Runtime library lookup<a class="headerlink" href="#runtime-library-lookup" title="Link to this heading">¶</a></h2>
+<h2>Runtime library lookup<a class="headerlink" href="#runtime-library-lookup" title="Link to this heading">#</a></h2>
 <p>Both <code class="docutils literal notranslate"><span class="pre">libneml2.so</span></code> and <code class="docutils literal notranslate"><span class="pre">libneml2_eager.so</span></code> live under
 <code class="docutils literal notranslate"><span class="pre">&lt;site-packages&gt;/neml2/lib/</span></code>. Each links against the libtorch shipped in
 the sibling <code class="docutils literal notranslate"><span class="pre">torch</span></code> wheel at <code class="docutils literal notranslate"><span class="pre">&lt;site-packages&gt;/torch/lib/</span></code>, reached via an
@@ -562,7 +577,7 @@ If you opt out of rpath, set
 <code class="docutils literal notranslate"><span class="pre">DYLD_LIBRARY_PATH</span></code> (macOS) before running.</p>
 </section>
 <section id="now-evaluate">
-<h2>Now evaluate<a class="headerlink" href="#now-evaluate" title="Link to this heading">¶</a></h2>
+<h2>Now evaluate<a class="headerlink" href="#now-evaluate" title="Link to this heading">#</a></h2>
 <p>With the build wired up and a model artifact in hand (a compiled <code class="docutils literal notranslate"><span class="pre">.pt2</span></code>
 package, or the original <code class="docutils literal notranslate"><span class="pre">.i</span></code> for the eager route), pick the route that
 matches your deployment:</p>
@@ -614,13 +629,13 @@ matches your deployment:</p>
   </p>
 </div>
       <div class="sy-foot-socials">
-<a href="https://github.com/applied-material-modeling/neml2" aria-label="GitHub">
-  <iconify-icon icon="simple-icons:github"></iconify-icon>
-</a></div>
+  <a href="https://github.com/applied-material-modeling/neml2" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=c3365b21"></script>
+      <script src="../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

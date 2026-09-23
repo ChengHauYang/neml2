@@ -2,11 +2,11 @@
 <html lang="en" data-accent-color="iris" data-content_root="../../../../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Cross-referencing - NEML2 3.0.6</title><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="Model composition" href="../model_composition/main.html" /><link rel="prev" title="Vectorization" href="../vectorization/main.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Cross-referencing - NEML2 3.1.0</title><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="Model composition" href="../model_composition/main.html" /><link rel="prev" title="Vectorization" href="../vectorization/main.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/shibuya.css?v=9454f7d5" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/shibuya.css?v=2ceb65ce" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../../../../_static/print.css?v=20ff2c19" />
@@ -92,6 +92,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="../../optimization/pyzag.html">Recurrent calibration with pyzag</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../optimization/deterministic/main.html">Deterministic material model calibration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../optimization/statistical/main.html">Statistical material model learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optimization/crystal_plasticity_calibration/main.html">Calibrating a crystal-plasticity model with pyzag</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tensor_types/index.html">Tensor types</a><ul>
@@ -140,6 +141,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment/python.html">Python integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment/cpp.html">C++ integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment/cli.html">CLI utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment/verbosity.html">Controlling verbosity</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">Contributing &amp; development</span></p>
 <ul>
@@ -160,7 +162,10 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../../../references/cpp_aoti.html"><code class="docutils literal notranslate"><span class="pre">cpp-aoti</span></code> — compiled model from C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../references/cpp_dispatch.html"><code class="docutils literal notranslate"><span class="pre">cpp-dispatch</span></code> — dispatching across devices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../references/cpp_eager.html"><code class="docutils literal notranslate"><span class="pre">cpp-eager</span></code> — eager evaluation from C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references/solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references/sub_batch.html">Sub-batch axes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../references/aoti_packages.html">AOTI packages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references/accelerators.html">Accelerators (device families)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../references/pipeline.html">Compilation pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../generated/syntax/index.html">Syntax catalog</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../generated/syntax/Models/index.html">Models</a><ul>
@@ -176,6 +181,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/ArrheniusParameter.html">ArrheniusParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/ComposedModel.html">ComposedModel</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/ConstantExtrapolationPredictor.html">ConstantExtrapolationPredictor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/CoordinateDescentPredictor.html">CoordinateDescentPredictor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/CopyMRP.html">CopyMRP</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/CopyMillerIndex.html">CopyMillerIndex</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/CopyR2.html">CopyR2</a></li>
@@ -196,16 +202,19 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/MillerIndexConstantParameter.html">MillerIndexConstantParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/MillerIndexInputParameter.html">MillerIndexInputParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/MillerIndexParameterToVariable.html">MillerIndexParameterToVariable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/MinMapComplementarity.html">MinMapComplementarity</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/MixedControlSetup.html">MixedControlSetup</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2BackwardEulerTimeIntegration.html">R2BackwardEulerTimeIntegration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2ConstantParameter.html">R2ConstantParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2Determinant.html">R2Determinant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2ForwardEulerTimeIntegration.html">R2ForwardEulerTimeIntegration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2InputParameter.html">R2InputParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2Multiplication.html">R2Multiplication</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2ParameterToVariable.html">R2ParameterToVariable</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2ToSR2.html">R2ToSR2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2ToWR2.html">R2ToWR2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2VariableRate.html">R2VariableRate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/RateCondensation.html">RateCondensation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/RotationMatrix.html">RotationMatrix</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/SR2BackwardEulerTimeIntegration.html">SR2BackwardEulerTimeIntegration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/SR2BilinearInterpolation.html">SR2BilinearInterpolation</a></li>
@@ -318,9 +327,15 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../generated/syntax/Solvers/index.html">Solvers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/BiCGStab.html">BiCGStab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/BlockJacobiPreconditioner.html">BlockJacobiPreconditioner</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/DenseLU.html">DenseLU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/FullPreconditioner.html">FullPreconditioner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/GMRES.html">GMRES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/JacobiPreconditioner.html">JacobiPreconditioner</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/Newton.html">Newton</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/NewtonWithLineSearch.html">NewtonWithLineSearch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/NoPreconditioner.html">NoPreconditioner</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/SchurComplement.html">SchurComplement</a></li>
 </ul>
 </li>
@@ -409,31 +424,31 @@ data-aria-dark="Switch to auto color mode">
       <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
   <article class="yue" role="main">
           <section class="tex2jax_ignore mathjax_ignore" id="cross-referencing">
-<span id="tutorials-models-cross-referencing"></span><h1>Cross-referencing<a class="headerlink" href="#cross-referencing" title="Link to this heading">¶</a></h1>
+<span id="tutorials-models-cross-referencing"></span><h1>Cross-referencing<a class="headerlink" href="#cross-referencing" title="Link to this heading">#</a></h1>
 <p>In this tutorial, we’ll wire a model to its tensor inputs and to other
 models by name — the basic glue that lets an input file hold more than
 one object. Anywhere a field expects an object name, we can write the
 name of another section in the file.</p>
 <section id="referring-to-a-tensor-from-a-model">
-<h2>Referring to a tensor from a model<a class="headerlink" href="#referring-to-a-tensor-from-a-model" title="Link to this heading">¶</a></h2>
+<h2>Referring to a tensor from a model<a class="headerlink" href="#referring-to-a-tensor-from-a-model" title="Link to this heading">#</a></h2>
 <p>When a model field expects a tensor value, we can point it at a
 <code class="docutils literal notranslate"><span class="pre">[Tensors]</span></code> entry by name:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[Tensors]</span>
 </span><span data-line="2"><span class="w">  </span><span class="k">[E]</span>
 </span><span data-line="3"><span class="w">    </span><span class="na">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">Python</span>
-</span><span data-line="4"><span class="w">    </span><span class="na">expr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;Scalar(200e3)&#39;</span>
+</span><span data-line="4"><span class="w">    </span><span class="na">expr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'Scalar(200e3)'</span>
 </span><span data-line="5"><span class="w">  </span><span class="k">[]</span>
 </span><span data-line="6"><span class="w">  </span><span class="k">[nu]</span>
 </span><span data-line="7"><span class="w">    </span><span class="na">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">Python</span>
-</span><span data-line="8"><span class="w">    </span><span class="na">expr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;Scalar(0.3)&#39;</span>
+</span><span data-line="8"><span class="w">    </span><span class="na">expr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'Scalar(0.3)'</span>
 </span><span data-line="9"><span class="w">  </span><span class="k">[]</span>
 </span><span data-line="10"><span class="k">[]</span>
 </span><span data-line="11">
 </span><span data-line="12"><span class="k">[Models]</span>
 </span><span data-line="13"><span class="w">  </span><span class="k">[elasticity]</span>
 </span><span data-line="14"><span class="w">    </span><span class="na">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">LinearIsotropicElasticity</span>
-</span><span data-line="15"><span class="w">    </span><span class="na">coefficients</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;E              nu&#39;</span><span class="w">                </span><span class="c1"># ← refers to [Tensors] entries</span>
-</span><span data-line="16"><span class="w">    </span><span class="na">coefficient_types</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;YOUNGS_MODULUS POISSONS_RATIO&#39;</span>
+</span><span data-line="15"><span class="w">    </span><span class="na">coefficients</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="s">'E              nu'</span><span class="w">                </span><span class="c1"># ← refers to [Tensors] entries</span>
+</span><span data-line="16"><span class="w">    </span><span class="na">coefficient_types</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'YOUNGS_MODULUS POISSONS_RATIO'</span>
 </span><span data-line="17"><span class="w">  </span><span class="k">[]</span>
 </span><span data-line="18"><span class="k">[]</span>
 </span></pre></div>
@@ -444,8 +459,8 @@ tensor inputs still need a <code class="docutils literal notranslate"><span clas
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[Models]</span>
 </span><span data-line="2"><span class="w">  </span><span class="k">[elasticity]</span>
 </span><span data-line="3"><span class="w">    </span><span class="na">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">LinearIsotropicElasticity</span>
-</span><span data-line="4"><span class="w">    </span><span class="na">coefficients</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;200e3          0.3&#39;</span><span class="w">               </span><span class="c1"># inline literals</span>
-</span><span data-line="5"><span class="w">    </span><span class="na">coefficient_types</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;YOUNGS_MODULUS POISSONS_RATIO&#39;</span>
+</span><span data-line="4"><span class="w">    </span><span class="na">coefficients</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="s">'200e3          0.3'</span><span class="w">               </span><span class="c1"># inline literals</span>
+</span><span data-line="5"><span class="w">    </span><span class="na">coefficient_types</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'YOUNGS_MODULUS POISSONS_RATIO'</span>
 </span><span data-line="6"><span class="w">  </span><span class="k">[]</span>
 </span><span data-line="7"><span class="k">[]</span>
 </span></pre></div>
@@ -458,7 +473,7 @@ or a CSV file rather than a bare number.</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[Tensors]</span>
 </span><span data-line="2"><span class="w">  </span><span class="k">[T_controls]</span>
 </span><span data-line="3"><span class="w">    </span><span class="na">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">Python</span>
-</span><span data-line="4"><span class="w">    </span><span class="na">expr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;linspace(Scalar(300.0).sub_batch, Scalar(1200.0).sub_batch, 20)&#39;</span>
+</span><span data-line="4"><span class="w">    </span><span class="na">expr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'linspace(Scalar(300.0).sub_batch, Scalar(1200.0).sub_batch, 20)'</span>
 </span><span data-line="5"><span class="w">  </span><span class="k">[]</span>
 </span><span data-line="6"><span class="k">[]</span>
 </span></pre></div>
@@ -466,7 +481,7 @@ or a CSV file rather than a bare number.</p>
 <p>Once declared, every model that references <code class="docutils literal notranslate"><span class="pre">T_controls</span></code> shares it.</p>
 </section>
 <section id="referring-to-a-model-from-another-model">
-<h2>Referring to a model from another model<a class="headerlink" href="#referring-to-a-model-from-another-model" title="Link to this heading">¶</a></h2>
+<h2>Referring to a model from another model<a class="headerlink" href="#referring-to-a-model-from-another-model" title="Link to this heading">#</a></h2>
 <p>Some models operate on <em>another model</em> rather than on a tensor, and
 their model-valued field takes the name of a <code class="docutils literal notranslate"><span class="pre">[Models]</span></code> entry the same
 way. <code class="docutils literal notranslate"><span class="pre">Normality</span></code> is one: it differentiates a scalar-valued function
@@ -476,16 +491,16 @@ to produce the associated flow direction
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[Models]</span>
 </span><span data-line="2"><span class="w">  </span><span class="k">[vonmises]</span>
 </span><span data-line="3"><span class="w">    </span><span class="na">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">SR2Invariant</span>
-</span><span data-line="4"><span class="w">    </span><span class="na">invariant_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;VONMISES&#39;</span>
-</span><span data-line="5"><span class="w">    </span><span class="na">tensor</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;mandel_stress&#39;</span>
-</span><span data-line="6"><span class="w">    </span><span class="na">invariant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;effective_stress&#39;</span>
+</span><span data-line="4"><span class="w">    </span><span class="na">invariant_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'VONMISES'</span>
+</span><span data-line="5"><span class="w">    </span><span class="na">tensor</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s">'mandel_stress'</span>
+</span><span data-line="6"><span class="w">    </span><span class="na">invariant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'effective_stress'</span>
 </span><span data-line="7"><span class="w">  </span><span class="k">[]</span>
 </span><span data-line="8"><span class="w">  </span><span class="k">[normality]</span>
 </span><span data-line="9"><span class="w">    </span><span class="na">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">Normality</span>
-</span><span data-line="10"><span class="w">    </span><span class="na">model</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;vonmises&#39;</span><span class="w">          </span><span class="c1"># ← name of the [Models] entry above</span>
-</span><span data-line="11"><span class="w">    </span><span class="na">function</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;effective_stress&#39;</span><span class="w">  </span><span class="c1"># the scalar output of `vonmises` to differentiate</span>
-</span><span data-line="12"><span class="w">    </span><span class="na">from</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;mandel_stress&#39;</span>
-</span><span data-line="13"><span class="w">    </span><span class="na">to</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;flow_direction&#39;</span>
+</span><span data-line="10"><span class="w">    </span><span class="na">model</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s">'vonmises'</span><span class="w">          </span><span class="c1"># ← name of the [Models] entry above</span>
+</span><span data-line="11"><span class="w">    </span><span class="na">function</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'effective_stress'</span><span class="w">  </span><span class="c1"># the scalar output of `vonmises` to differentiate</span>
+</span><span data-line="12"><span class="w">    </span><span class="na">from</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s">'mandel_stress'</span>
+</span><span data-line="13"><span class="w">    </span><span class="na">to</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s">'flow_direction'</span>
 </span><span data-line="14"><span class="w">  </span><span class="k">[]</span>
 </span><span data-line="15"><span class="k">[]</span>
 </span></pre></div>
@@ -498,7 +513,7 @@ inputs and outputs by the variables a model produces and consumes, which
 is the wiring mechanism the next tutorial builds on.</p>
 </section>
 <section id="where-to-go-next">
-<h2>Where to go next<a class="headerlink" href="#where-to-go-next" title="Link to this heading">¶</a></h2>
+<h2>Where to go next<a class="headerlink" href="#where-to-go-next" title="Link to this heading">#</a></h2>
 <p>The same name-binding mechanism is what <code class="docutils literal notranslate"><span class="pre">ComposedModel</span></code> uses to wire
 its children together — see <a class="reference internal" href="../model_composition/main.html#tutorials-models-composition"><span class="std std-ref">Model composition</span></a>.</p>
 </section>
@@ -541,13 +556,13 @@ its children together — see <a class="reference internal" href="../model_compo
   </p>
 </div>
       <div class="sy-foot-socials">
-<a href="https://github.com/applied-material-modeling/neml2" aria-label="GitHub">
-  <iconify-icon icon="simple-icons:github"></iconify-icon>
-</a></div>
+  <a href="https://github.com/applied-material-modeling/neml2" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
     </div>
   </div>
 </footer>
-      <script src="../../../../_static/documentation_options.js?v=c3365b21"></script>
+      <script src="../../../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>

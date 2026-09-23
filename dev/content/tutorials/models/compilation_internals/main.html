@@ -2,11 +2,11 @@
 <html lang="en" data-accent-color="iris" data-content_root="../../../../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>How compilation works - NEML2 3.0.6</title><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="Declaring inputs, outputs, and parameters" href="../../extension/argument_declaration/main.html" /><link rel="prev" title="Compiled models" href="../compiled_models/main.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>How compilation works - NEML2 3.1.0</title><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="Declaring inputs, outputs, and parameters" href="../../extension/argument_declaration/main.html" /><link rel="prev" title="Compiled models" href="../compiled_models/main.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/shibuya.css?v=9454f7d5" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/shibuya.css?v=2ceb65ce" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../../../../_static/print.css?v=20ff2c19" />
@@ -92,6 +92,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="../../optimization/pyzag.html">Recurrent calibration with pyzag</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../optimization/deterministic/main.html">Deterministic material model calibration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../optimization/statistical/main.html">Statistical material model learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optimization/crystal_plasticity_calibration/main.html">Calibrating a crystal-plasticity model with pyzag</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tensor_types/index.html">Tensor types</a><ul>
@@ -140,6 +141,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment/python.html">Python integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment/cpp.html">C++ integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment/cli.html">CLI utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment/verbosity.html">Controlling verbosity</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">Contributing &amp; development</span></p>
 <ul>
@@ -160,7 +162,10 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../../../references/cpp_aoti.html"><code class="docutils literal notranslate"><span class="pre">cpp-aoti</span></code> — compiled model from C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../references/cpp_dispatch.html"><code class="docutils literal notranslate"><span class="pre">cpp-dispatch</span></code> — dispatching across devices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../references/cpp_eager.html"><code class="docutils literal notranslate"><span class="pre">cpp-eager</span></code> — eager evaluation from C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references/solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references/sub_batch.html">Sub-batch axes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../references/aoti_packages.html">AOTI packages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references/accelerators.html">Accelerators (device families)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../references/pipeline.html">Compilation pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../generated/syntax/index.html">Syntax catalog</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../generated/syntax/Models/index.html">Models</a><ul>
@@ -176,6 +181,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/ArrheniusParameter.html">ArrheniusParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/ComposedModel.html">ComposedModel</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/ConstantExtrapolationPredictor.html">ConstantExtrapolationPredictor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/CoordinateDescentPredictor.html">CoordinateDescentPredictor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/CopyMRP.html">CopyMRP</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/CopyMillerIndex.html">CopyMillerIndex</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/CopyR2.html">CopyR2</a></li>
@@ -196,16 +202,19 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/MillerIndexConstantParameter.html">MillerIndexConstantParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/MillerIndexInputParameter.html">MillerIndexInputParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/MillerIndexParameterToVariable.html">MillerIndexParameterToVariable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/MinMapComplementarity.html">MinMapComplementarity</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/MixedControlSetup.html">MixedControlSetup</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2BackwardEulerTimeIntegration.html">R2BackwardEulerTimeIntegration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2ConstantParameter.html">R2ConstantParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2Determinant.html">R2Determinant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2ForwardEulerTimeIntegration.html">R2ForwardEulerTimeIntegration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2InputParameter.html">R2InputParameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2Multiplication.html">R2Multiplication</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2ParameterToVariable.html">R2ParameterToVariable</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2ToSR2.html">R2ToSR2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2ToWR2.html">R2ToWR2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/R2VariableRate.html">R2VariableRate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/RateCondensation.html">RateCondensation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/RotationMatrix.html">RotationMatrix</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/SR2BackwardEulerTimeIntegration.html">SR2BackwardEulerTimeIntegration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../generated/syntax/Models/common/SR2BilinearInterpolation.html">SR2BilinearInterpolation</a></li>
@@ -318,9 +327,15 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../generated/syntax/Solvers/index.html">Solvers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/BiCGStab.html">BiCGStab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/BlockJacobiPreconditioner.html">BlockJacobiPreconditioner</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/DenseLU.html">DenseLU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/FullPreconditioner.html">FullPreconditioner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/GMRES.html">GMRES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/JacobiPreconditioner.html">JacobiPreconditioner</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/Newton.html">Newton</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/NewtonWithLineSearch.html">NewtonWithLineSearch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/NoPreconditioner.html">NoPreconditioner</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../generated/syntax/Solvers/SchurComplement.html">SchurComplement</a></li>
 </ul>
 </li>
@@ -372,7 +387,7 @@ data-aria-dark="Switch to auto color mode">
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#a-model-with-a-shared-subexpression">A model with a shared subexpression</a></li>
-<li><a class="reference internal" href="#stage-1-capture-torch-export-the-fx-graph">Stage 1 &#8212; capture: <code class="docutils literal notranslate">export</span></code> &#8594; the FX graph</a></li>
+<li><a class="reference internal" href="#stage-1-capture-torch-export-the-fx-graph">Stage 1 &#8212; capture: <code class="docutils literal notranslate"><span class="pre">torch.export</span></code> &#8594; the FX graph</a></li>
 <li><a class="reference internal" href="#stage-2-lower-aotinductor-native-code">Stage 2 &#8212; lower: AOTInductor &#8594; native code</a></li>
 <li><a class="reference internal" href="#the-ir-in-between">The IR in between</a></li>
 <li><a class="reference internal" href="#what-changes-when-we-compile-for-the-gpu">What changes when we compile for the GPU</a></li>
@@ -413,7 +428,7 @@ data-aria-dark="Switch to auto color mode">
       <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
   <article class="yue" role="main">
           <section class="tex2jax_ignore mathjax_ignore" id="how-compilation-works">
-<span id="tutorials-models-compilation-internals"></span><h1>How compilation works<a class="headerlink" href="#how-compilation-works" title="Link to this heading">¶</a></h1>
+<span id="tutorials-models-compilation-internals"></span><h1>How compilation works<a class="headerlink" href="#how-compilation-works" title="Link to this heading">#</a></h1>
 <p>The <a class="reference internal" href="../compiled_models/main.html#tutorials-models-compiled"><span class="std std-ref">previous tutorial</span></a> showed <em>how</em> to compile a model
 and call it — <code class="docutils literal notranslate"><span class="pre">neml2-compile</span></code>, the <code class="docutils literal notranslate"><span class="pre">.pt2</span></code> artifact, the drop-in stub. This one
 opens the box: <em>what actually happens</em> when a model is compiled, shown on a small
@@ -428,7 +443,7 @@ compiles a native kernel (C++ on CPU, Triton on GPU), packaged into the <code cl
 <p>We’ll watch a model go through both stages and read the graph and the generated
 code at each end.</p>
 <section id="a-model-with-a-shared-subexpression">
-<h2>A model with a shared subexpression<a class="headerlink" href="#a-model-with-a-shared-subexpression" title="Link to this heading">¶</a></h2>
+<h2>A model with a shared subexpression<a class="headerlink" href="#a-model-with-a-shared-subexpression" title="Link to this heading">#</a></h2>
 <p>To make the optimization visible we need an example where the same quantity is
 computed more than once. Three first-order rates sharing a denominator do the job:</p>
 <div class="math-wrapper docutils container">
@@ -450,19 +465,19 @@ should be able to remove.</p>
 </span><span data-line="2"><span class="p">[</span><span class="n">Models</span><span class="p">]</span>
 </span><span data-line="3">  <span class="p">[</span><span class="n">eq1</span><span class="p">]</span>
 </span><span data-line="4">    <span class="nb">type</span> <span class="o">=</span> <span class="n">ScalarVariableRate</span>
-</span><span data-line="5">    <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;a&#39;</span>
+</span><span data-line="5">    <span class="n">variable</span> <span class="o">=</span> <span class="s1">'a'</span>
 </span><span data-line="6">  <span class="p">[]</span>
 </span><span data-line="7">  <span class="p">[</span><span class="n">eq2</span><span class="p">]</span>
 </span><span data-line="8">    <span class="nb">type</span> <span class="o">=</span> <span class="n">ScalarVariableRate</span>
-</span><span data-line="9">    <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;b&#39;</span>
+</span><span data-line="9">    <span class="n">variable</span> <span class="o">=</span> <span class="s1">'b'</span>
 </span><span data-line="10">  <span class="p">[]</span>
 </span><span data-line="11">  <span class="p">[</span><span class="n">eq3</span><span class="p">]</span>
 </span><span data-line="12">    <span class="nb">type</span> <span class="o">=</span> <span class="n">ScalarVariableRate</span>
-</span><span data-line="13">    <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;c&#39;</span>
+</span><span data-line="13">    <span class="n">variable</span> <span class="o">=</span> <span class="s1">'c'</span>
 </span><span data-line="14">  <span class="p">[]</span>
 </span><span data-line="15">  <span class="p">[</span><span class="n">eq</span><span class="p">]</span>
 </span><span data-line="16">    <span class="nb">type</span> <span class="o">=</span> <span class="n">ComposedModel</span>
-</span><span data-line="17">    <span class="n">models</span> <span class="o">=</span> <span class="s1">&#39;eq1 eq2 eq3&#39;</span>
+</span><span data-line="17">    <span class="n">models</span> <span class="o">=</span> <span class="s1">'eq1 eq2 eq3'</span>
 </span><span data-line="18">  <span class="p">[]</span>
 </span><span data-line="19"><span class="p">[]</span>
 </span></pre></div>
@@ -484,22 +499,22 @@ should be able to remove.</p>
 </span><span data-line="4">
 </span><span data-line="5"><span class="kn">import</span><span class="w"> </span><span class="nn">neml2</span>
 </span><span data-line="6">
-</span><span data-line="7"><span class="n">model</span> <span class="o">=</span> <span class="n">neml2</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;input.i&quot;</span><span class="p">,</span> <span class="s2">&quot;eq&quot;</span><span class="p">)</span>
-</span><span data-line="8"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;inputs :&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">input_spec</span><span class="p">))</span>
-</span><span data-line="9"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;outputs:&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">output_spec</span><span class="p">))</span>
+</span><span data-line="7"><span class="n">model</span> <span class="o">=</span> <span class="n">neml2</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"input.i"</span><span class="p">,</span> <span class="s2">"eq"</span><span class="p">)</span>
+</span><span data-line="8"><span class="nb">print</span><span class="p">(</span><span class="s2">"inputs :"</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">input_spec</span><span class="p">))</span>
+</span><span data-line="9"><span class="nb">print</span><span class="p">(</span><span class="s2">"outputs:"</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">output_spec</span><span class="p">))</span>
 </span></pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span data-line="1">inputs : [&#39;a&#39;, &#39;a~1&#39;, &#39;t&#39;, &#39;t~1&#39;, &#39;b&#39;, &#39;b~1&#39;, &#39;c&#39;, &#39;c~1&#39;]
-</span><span data-line="2">outputs: [&#39;a_rate&#39;, &#39;b_rate&#39;, &#39;c_rate&#39;]
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span data-line="1">inputs : ['a', 'a~1', 't', 't~1', 'b', 'b~1', 'c', 'c~1']
+</span><span data-line="2">outputs: ['a_rate', 'b_rate', 'c_rate']
 </span></pre></div>
 </div>
 </div>
 </div>
 </section>
 <section id="stage-1-capture-torch-export-the-fx-graph">
-<h2>Stage 1 — capture: <code class="docutils literal notranslate"><span class="pre">torch.export</span></code> → the FX graph<a class="headerlink" href="#stage-1-capture-torch-export-the-fx-graph" title="Link to this heading">¶</a></h2>
+<h2>Stage 1 — capture: <code class="docutils literal notranslate"><span class="pre">torch.export</span></code> → the FX graph<a class="headerlink" href="#stage-1-capture-torch-export-the-fx-graph" title="Link to this heading">#</a></h2>
 <p>The first thing <code class="docutils literal notranslate"><span class="pre">neml2-compile</span></code> does is trace the model with <code class="docutils literal notranslate"><span class="pre">torch.export</span></code>,
 recording every tensor operation into an <em>FX graph</em>. Tracing needs example
 inputs with a representative dtype and batch shape — one typed tensor per
@@ -517,22 +532,22 @@ declared input (a batch of 2 here, so the batch axis is a real dimension):</p>
 </span><span data-line="9"><span class="c1"># Print just the captured forward body (the tensor operations).</span>
 </span><span data-line="10"><span class="n">graph_src</span> <span class="o">=</span> <span class="n">exported</span><span class="o">.</span><span class="n">graph_module</span><span class="o">.</span><span class="n">print_readable</span><span class="p">(</span><span class="n">print_output</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </span><span data-line="11"><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">graph_src</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
-</span><span data-line="12">    <span class="k">if</span> <span class="s2">&quot;aten.&quot;</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;def forward&quot;</span><span class="p">,</span> <span class="s2">&quot;return&quot;</span><span class="p">)):</span>
+</span><span data-line="12">    <span class="k">if</span> <span class="s2">"aten."</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">"def forward"</span><span class="p">,</span> <span class="s2">"return"</span><span class="p">)):</span>
 </span><span data-line="13">        <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
 </span></pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span data-line="1">    def forward(self, inputs_0_data: &quot;f64[2]&quot;, inputs_1_data: &quot;f64[2]&quot;, inputs_2_data: &quot;f64[2]&quot;, inputs_3_data: &quot;f64[2]&quot;, inputs_4_data: &quot;f64[2]&quot;, inputs_5_data: &quot;f64[2]&quot;, inputs_6_data: &quot;f64[2]&quot;, inputs_7_data: &quot;f64[2]&quot;):
-</span><span data-line="2">        sub: &quot;f64[2]&quot; = torch.ops.aten.sub.Tensor(inputs_2_data, inputs_3_data)
-</span><span data-line="3">        sub_1: &quot;f64[2]&quot; = torch.ops.aten.sub.Tensor(inputs_0_data, inputs_1_data);  inputs_0_data = inputs_1_data = None
-</span><span data-line="4">        div: &quot;f64[2]&quot; = torch.ops.aten.div.Tensor(sub_1, sub);  sub_1 = sub = None
-</span><span data-line="5">        sub_2: &quot;f64[2]&quot; = torch.ops.aten.sub.Tensor(inputs_2_data, inputs_3_data)
-</span><span data-line="6">        sub_3: &quot;f64[2]&quot; = torch.ops.aten.sub.Tensor(inputs_4_data, inputs_5_data);  inputs_4_data = inputs_5_data = None
-</span><span data-line="7">        div_1: &quot;f64[2]&quot; = torch.ops.aten.div.Tensor(sub_3, sub_2);  sub_3 = sub_2 = None
-</span><span data-line="8">        sub_4: &quot;f64[2]&quot; = torch.ops.aten.sub.Tensor(inputs_2_data, inputs_3_data);  inputs_2_data = inputs_3_data = None
-</span><span data-line="9">        sub_5: &quot;f64[2]&quot; = torch.ops.aten.sub.Tensor(inputs_6_data, inputs_7_data);  inputs_6_data = inputs_7_data = None
-</span><span data-line="10">        div_2: &quot;f64[2]&quot; = torch.ops.aten.div.Tensor(sub_5, sub_4);  sub_5 = sub_4 = None
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span data-line="1">    def forward(self, inputs_0_data: "f64[2]", inputs_1_data: "f64[2]", inputs_2_data: "f64[2]", inputs_3_data: "f64[2]", inputs_4_data: "f64[2]", inputs_5_data: "f64[2]", inputs_6_data: "f64[2]", inputs_7_data: "f64[2]"):
+</span><span data-line="2">        sub: "f64[2]" = torch.ops.aten.sub.Tensor(inputs_2_data, inputs_3_data)
+</span><span data-line="3">        sub_1: "f64[2]" = torch.ops.aten.sub.Tensor(inputs_0_data, inputs_1_data);  inputs_0_data = inputs_1_data = None
+</span><span data-line="4">        div: "f64[2]" = torch.ops.aten.div.Tensor(sub_1, sub);  sub_1 = sub = None
+</span><span data-line="5">        sub_2: "f64[2]" = torch.ops.aten.sub.Tensor(inputs_2_data, inputs_3_data)
+</span><span data-line="6">        sub_3: "f64[2]" = torch.ops.aten.sub.Tensor(inputs_4_data, inputs_5_data);  inputs_4_data = inputs_5_data = None
+</span><span data-line="7">        div_1: "f64[2]" = torch.ops.aten.div.Tensor(sub_3, sub_2);  sub_3 = sub_2 = None
+</span><span data-line="8">        sub_4: "f64[2]" = torch.ops.aten.sub.Tensor(inputs_2_data, inputs_3_data);  inputs_2_data = inputs_3_data = None
+</span><span data-line="9">        sub_5: "f64[2]" = torch.ops.aten.sub.Tensor(inputs_6_data, inputs_7_data);  inputs_6_data = inputs_7_data = None
+</span><span data-line="10">        div_2: "f64[2]" = torch.ops.aten.div.Tensor(sub_5, sub_4);  sub_5 = sub_4 = None
 </span><span data-line="11">        return (div, div_1, div_2)
 </span></pre></div>
 </div>
@@ -547,7 +562,7 @@ own copy of the shared denominator, exactly as the eager Python ran. This is the
 device-agnostic starting point; the optimization happens next.</p>
 </section>
 <section id="stage-2-lower-aotinductor-native-code">
-<h2>Stage 2 — lower: AOTInductor → native code<a class="headerlink" href="#stage-2-lower-aotinductor-native-code" title="Link to this heading">¶</a></h2>
+<h2>Stage 2 — lower: AOTInductor → native code<a class="headerlink" href="#stage-2-lower-aotinductor-native-code" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">neml2-compile</span></code> hands the FX graph to <strong>AOTInductor</strong>, which runs a series of
 optimization passes (common-subexpression elimination, fusion, layout choices,
 dead-code elimination, vectorization, …), generates kernel source for the target
@@ -560,9 +575,15 @@ same command from the previous tutorial) and then read what it generated:</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span data-line="1">Compiled &#39;eq&#39; (composed, fully baked, no derivative graphs (use -d to compile jvp/jacobian)) for [cpu] -&gt; aoti/eq
-</span><span data-line="2">  stub: aoti/eq_aoti.i
-</span><span data-line="3">  cpu: aoti/eq/cpu/eq_meta.json
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span data-line="1">[1/3] cpu/eq.pt2
+</span></pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span data-line="1">[2/3] metadata.json
+</span><span data-line="2">[3/3] eq_aoti.i
+</span><span data-line="3">Compiled 'eq' (composed, fully baked, no derivative graphs (use -d to compile jvp/jacobian)) for [cpu] -&gt; aoti/eq
+</span><span data-line="4">  metadata: aoti/eq/metadata.json
+</span><span data-line="5">  stub: aoti/eq_aoti.i
+</span><span data-line="6">  cpu: aoti/eq/cpu/float64/
 </span></pre></div>
 </div>
 </div>
@@ -574,18 +595,18 @@ same command from the previous tutorial) and then read what it generated:</p>
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
 </span><span data-line="2">
-</span><span data-line="3"><span class="n">pt2</span> <span class="o">=</span> <span class="s2">&quot;aoti/eq/cpu/eq.pt2&quot;</span>
+</span><span data-line="3"><span class="n">pt2</span> <span class="o">=</span> <span class="s2">"aoti/eq/cpu/float64/eq.pt2"</span>
 </span><span data-line="4"><span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">pt2</span><span class="p">)</span> <span class="k">as</span> <span class="n">z</span><span class="p">:</span>
 </span><span data-line="5">    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">z</span><span class="o">.</span><span class="n">namelist</span><span class="p">():</span>
-</span><span data-line="6">        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.cpp&quot;</span><span class="p">,</span> <span class="s2">&quot;.so&quot;</span><span class="p">)):</span>
-</span><span data-line="7">            <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</span><span data-line="6">        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">".cpp"</span><span class="p">,</span> <span class="s2">".so"</span><span class="p">)):</span>
+</span><span data-line="7">            <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 </span></pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span data-line="1">c4hibo4n5aodibrlo45j2c3rfza3yfwgt6dpllt6y5gcaznz4qa6.wrapper.cpp
-</span><span data-line="2">cjwug2uxpgkc4axympik6anvhxjim6fmu62hrp45rwnhedol4ceb.kernel.cpp
-</span><span data-line="3">c4hibo4n5aodibrlo45j2c3rfza3yfwgt6dpllt6y5gcaznz4qa6.wrapper.so
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span data-line="1">casczoedezayuej4wxmzwtwjya6pd2biz5b7tbyzexshfr7xry4e.wrapper.cpp
+</span><span data-line="2">cvaipqbj6am7vji67gystcvlrbsu56xkyrjjajkm2jgkjbqdc6qp.kernel.cpp
+</span><span data-line="3">casczoedezayuej4wxmzwtwjya6pd2biz5b7tbyzexshfr7xry4e.wrapper.so
 </span></pre></div>
 </div>
 </div>
@@ -595,27 +616,27 @@ compiler actually emitted:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">pt2</span><span class="p">)</span> <span class="k">as</span> <span class="n">z</span><span class="p">:</span>
-</span><span data-line="2">    <span class="n">kernel</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">z</span><span class="o">.</span><span class="n">namelist</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;kernel.cpp&quot;</span><span class="p">))</span>
+</span><span data-line="2">    <span class="n">kernel</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">z</span><span class="o">.</span><span class="n">namelist</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"kernel.cpp"</span><span class="p">))</span>
 </span><span data-line="3">    <span class="n">src</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
 </span><span data-line="4">
-</span><span data-line="5"><span class="c1"># The fused kernel&#39;s name, then its arithmetic. The kernel has two loops (a</span>
+</span><span data-line="5"><span class="c1"># The fused kernel's name, then its arithmetic. The kernel has two loops (a</span>
 </span><span data-line="6"><span class="c1"># vectorized main loop and a masked tail) with identical math, so we print the</span>
 </span><span data-line="7"><span class="c1"># first one and stop once the arithmetic starts repeating.</span>
-</span><span data-line="8"><span class="nb">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">src</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="s2">&quot;cpp_fused&quot;</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">and</span> <span class="s2">&quot;void&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">))</span>
-</span><span data-line="9"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+</span><span data-line="8"><span class="nb">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">src</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="s2">"cpp_fused"</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">and</span> <span class="s2">"void"</span> <span class="ow">in</span> <span class="n">line</span><span class="p">))</span>
+</span><span data-line="9"><span class="nb">print</span><span class="p">(</span><span class="s2">"..."</span><span class="p">)</span>
 </span><span data-line="10"><span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 </span><span data-line="11"><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">src</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
 </span><span data-line="12">    <span class="n">s</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span data-line="13">    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;auto tmp&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot; - tmp&quot;</span> <span class="ow">in</span> <span class="n">s</span> <span class="ow">or</span> <span class="s2">&quot; / tmp&quot;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">):</span>
+</span><span data-line="13">    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"auto tmp"</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">" - tmp"</span> <span class="ow">in</span> <span class="n">s</span> <span class="ow">or</span> <span class="s2">" / tmp"</span> <span class="ow">in</span> <span class="n">s</span><span class="p">):</span>
 </span><span data-line="14">        <span class="k">if</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
 </span><span data-line="15">            <span class="k">break</span>
 </span><span data-line="16">        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-</span><span data-line="17">        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   &quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+</span><span data-line="17">        <span class="nb">print</span><span class="p">(</span><span class="s2">"   "</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span data-line="1">extern &quot;C&quot;  void  cpp_fused_div_sub_0(const double* in_ptr0,
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span data-line="1">extern "C"  void  cpp_fused_div_sub_0(const double* in_ptr0,
 </span><span data-line="2">...
 </span><span data-line="3">    auto tmp2 = tmp0 - tmp1;
 </span><span data-line="4">    auto tmp5 = tmp3 - tmp4;
@@ -644,7 +665,7 @@ engine performed on its trace — but here it lands as real, vectorized, compile
 machine code rather than an optimized interpreter graph.</p>
 </section>
 <section id="the-ir-in-between">
-<h2>The IR in between<a class="headerlink" href="#the-ir-in-between" title="Link to this heading">¶</a></h2>
+<h2>The IR in between<a class="headerlink" href="#the-ir-in-between" title="Link to this heading">#</a></h2>
 <p>Between the FX graph and the C++, Inductor builds its own intermediate
 representation and makes the fusion and scheduling decisions there. It’s verbose
 and internal, so we don’t reproduce it here — but if you’re curious you can dump
@@ -658,7 +679,7 @@ operations collapsed into a single <code class="docutils literal notranslate"><s
 is the kernel we read above.</p>
 </section>
 <section id="what-changes-when-we-compile-for-the-gpu">
-<h2>What changes when we compile for the GPU<a class="headerlink" href="#what-changes-when-we-compile-for-the-gpu" title="Link to this heading">¶</a></h2>
+<h2>What changes when we compile for the GPU<a class="headerlink" href="#what-changes-when-we-compile-for-the-gpu" title="Link to this heading">#</a></h2>
 <p>This notebook compiled for the CPU, so the kernel above is C++. Targeting CUDA
 (<code class="docutils literal notranslate"><span class="pre">neml2-compile</span> <span class="pre">--device</span> <span class="pre">cuda</span></code>, which additionally needs <code class="docutils literal notranslate"><span class="pre">nvcc</span></code>) reuses the
 <em>same</em> captured FX graph but lowers it differently. A few things worth knowing:</p>
@@ -683,13 +704,13 @@ configurations for the target shape and keeping the fastest. It’s a one-time
 compile cost baked into the artifact. CUDA-graph capture (replaying a whole
 launch sequence as one unit) is also available for launch-bound graphs.</p></li>
 <li><p><strong>Same artifact contract.</strong> The result is still a <code class="docutils literal notranslate"><span class="pre">.pt2</span></code>, just holding a CUDA
-<code class="docutils literal notranslate"><span class="pre">.so</span></code>; <code class="docutils literal notranslate"><span class="pre">--device</span> <span class="pre">cpu</span> <span class="pre">cuda</span></code> builds both and the loader picks the folder matching
-the runtime device (see <a class="reference internal" href="../compiled_models/main.html#tutorials-models-compiled"><span class="std std-ref">Compiled models</span></a>). Device and dtype are
-pinned at compile time.</p></li>
+<code class="docutils literal notranslate"><span class="pre">.so</span></code>; <code class="docutils literal notranslate"><span class="pre">--device</span> <span class="pre">cpu</span> <span class="pre">cuda</span></code> builds both under sibling <code class="docutils literal notranslate"><span class="pre">&lt;device&gt;/&lt;dtype&gt;/</span></code> leaves,
+and the load-time <code class="docutils literal notranslate"><span class="pre">device</span></code>/<code class="docutils literal notranslate"><span class="pre">dtype</span></code> pick which one (see
+<a class="reference internal" href="../compiled_models/main.html#tutorials-models-compiled"><span class="std std-ref">Compiled models</span></a>). Device and dtype are pinned at compile time.</p></li>
 </ul>
 </section>
 <section id="recap">
-<h2>Recap<a class="headerlink" href="#recap" title="Link to this heading">¶</a></h2>
+<h2>Recap<a class="headerlink" href="#recap" title="Link to this heading">#</a></h2>
 <p>When we run <code class="docutils literal notranslate"><span class="pre">neml2-compile</span></code>, the model travels:</p>
 <blockquote>
 <div><p>eager <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code> → <strong><code class="docutils literal notranslate"><span class="pre">torch.export</span></code></strong> (FX graph) → <strong>AOTInductor</strong> (optimize →
@@ -699,7 +720,7 @@ generate → compile native kernels) → <strong><code class="docutils literal n
 redundancy is removed and the math becomes fast device code.</p>
 </section>
 <section id="where-to-go-next">
-<h2>Where to go next<a class="headerlink" href="#where-to-go-next" title="Link to this heading">¶</a></h2>
+<h2>Where to go next<a class="headerlink" href="#where-to-go-next" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="../../../references/pipeline.html#model-compilation-pipeline"><span class="std std-ref">Compilation pipeline</span></a> — the full compilation pipeline reference,
 including how implicit (Newton-solve) models are split into segments.</p></li>
@@ -748,13 +769,13 @@ running a compiled model.</p></li>
   </p>
 </div>
       <div class="sy-foot-socials">
-<a href="https://github.com/applied-material-modeling/neml2" aria-label="GitHub">
-  <iconify-icon icon="simple-icons:github"></iconify-icon>
-</a></div>
+  <a href="https://github.com/applied-material-modeling/neml2" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
     </div>
   </div>
 </footer>
-      <script src="../../../../_static/documentation_options.js?v=c3365b21"></script>
+      <script src="../../../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
